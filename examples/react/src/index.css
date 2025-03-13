@@ -1,0 +1,328 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .h1 {
+    @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+  }
+  .h2 {
+    @apply scroll-m-20 border-b border-b-slate-200 text-3xl font-semibold tracking-tight transition-colors first:mt-0 dark:border-b-slate-700;
+  }
+  .center {
+    @apply absolute top-[50%] left-[50%] transform -translate-x-2/4 -translate-y-2/4;
+  }
+  .center--top {
+    @apply top-[24%];
+  }
+}
+body {
+  user-select: none;
+  -moz-user-select: none; /* Firefox */
+  -webkit-user-select: none; /* Chrome, Safari, and Opera */
+}
+.app__mask {
+  transition: all 0.8s;
+}
+.scroll {
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll--fix {
+  overscroll-behavior: auto;
+}
+.scroll--hidden::-webkit-scrollbar {
+  display: none;
+}
+.scroll-view__back {
+  background: url("https://cdn.weipaitang.com/static/2019121808df9be1-82c2-9be182c2-7a74-76514f6ee9ff-W100H159")
+    0% 0% / 100% 100% no-repeat;
+}
+.scroll-view__loading {
+  transition: all 0.2s;
+}
+.blur-bg {
+  backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.5);
+}
+.huizhang {
+  position: relative;
+  border-radius: 10px 10px 10px 0px;
+  color: #fff;
+  padding: 2px 4px;
+  font-size: 10px;
+  line-height: 12px;
+  background: linear-gradient(
+      to right bottom,
+      rgba(255, 255, 255, 0.4),
+      transparent
+    )
+    var(--weui-BRAND);
+  background-blend-mode: soft-light;
+}
+
+.animate-bar1 {
+  animation-name: playing-bar1;
+}
+.animate-bar2 {
+  animation-name: playing-bar2;
+  animation-delay: 0.1s;
+}
+.animate-bar3 {
+  animation-name: playing-bar3;
+  animation-delay: 0.2s;
+}
+.play-animation {
+  display: flex;
+  align-items: flex-end;
+  height: 100px;
+}
+.bar {
+  width: 4px;
+  margin: 0 2px;
+  background-color: var(--weui-FG-1);
+  animation-duration: 0.8s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+.bar1 {
+  animation-name: playing-bar1;
+}
+.bar2 {
+  animation-name: playing-bar2;
+  animation-delay: 0.1s;
+}
+.bar3 {
+  animation-name: playing-bar3;
+  animation-delay: 0.4s;
+}
+@keyframes playing-bar1 {
+  0%,
+  40%,
+  100% {
+    height: 8px;
+  }
+  20% {
+    height: 16px;
+  }
+  60% {
+    height: 28px;
+  }
+}
+@keyframes playing-bar2 {
+  0%,
+  40%,
+  100% {
+    height: 8px;
+  }
+  20% {
+    height: 24px;
+  }
+  60% {
+    height: 16px;
+  }
+}
+@keyframes playing-bar3 {
+  0%,
+  40%,
+  100% {
+    height: 6px;
+  }
+  20% {
+    height: 14px;
+  }
+  60% {
+    height: 20px;
+  }
+}
+
+.__a {
+  animation: __a 0.1s;
+}
+@keyframes __a {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes loading-show {
+  100% {
+    height: 40px;
+  }
+}
+@keyframes loading-close {
+  0% {
+    height: 40px;
+  }
+  100% {
+    height: 0;
+  }
+}
+@keyframes loading-cancel {
+  100% {
+    height: 0;
+  }
+}
+@keyframes FadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes FadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes FadeIn2 {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+@keyframes FadeOut2 {
+  0% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes SlideInToTop {
+  0% {
+    transform: translateY(100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+@keyframes SlideOutFromBottom {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+@keyframes SlideInToLeft {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+@keyframes SlideOutFromRight {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.transition {
+  transition-property: color, background-color, border-color,
+    text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter,
+    -webkit-backdrop-filter;
+  transition-property: color, background-color, border-color,
+    text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter,
+    backdrop-filter;
+  transition-property: color, background-color, border-color,
+    text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter,
+    backdrop-filter, -webkit-backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 0.15s;
+}
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 0.15s;
+}
+.transition-colors {
+  transition-property: color, background-color, border-color,
+    text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 0.15s;
+}
+.transition-none {
+  transition-property: none;
+}
+.transition-opacity {
+  transition-property: opacity;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 0.15s;
+}
+.transition-transform {
+  transition-property: transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 0.15s;
+}
+.duration-1000 {
+  transition-duration: 1s;
+}
+.duration-200 {
+  transition-duration: 0.2s;
+}
+.duration-300 {
+  transition-duration: 0.3s;
+}
+.duration-500 {
+  transition-duration: 0.5s;
+}
+.ease-in {
+  transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+.ease-in-out {
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ease-out {
+  transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+.fade-in-0 {
+  --tw-enter-opacity: 0;
+}
+.fade-in-80 {
+  --tw-enter-opacity: 0.8;
+}
+.zoom-in-95 {
+  --tw-enter-scale: 0.95;
+}
+.duration-1000 {
+  animation-duration: 1s;
+}
+.duration-200 {
+  animation-duration: 0.2s;
+}
+.duration-300 {
+  animation-duration: 0.3s;
+}
+.ease-in {
+  animation-timing-function: cubic-bezier(0.4, 0, 1, 1);
+}
+.ease-in-out {
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ease-out {
+  animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+.slide-in-from-top-full {
+  --tw-enter-translate-y: -100%;
+}
+.slide-in-from-top {
+  --tw-enter-translate-y: -100%;
+}
+.slide-out-to-bottom {
+  --tw-exit-translate-y: 100%;
+}

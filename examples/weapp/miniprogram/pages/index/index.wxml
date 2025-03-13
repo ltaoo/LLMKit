@@ -1,0 +1,5 @@
+<view>
+  <text>WeApp Demo</text>
+  <form-component bind:change="handleChange"></form-component>
+  <text>Value: {{value}}</text>
+</view> 

@@ -1,0 +1,16 @@
+{
+  "name": "your-project-name",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev:react": "cd docs/react && vite",
+    "dev:vue": "cd docs/vue && vite",
+    "dev:solid": "cd docs/solidjs && vite",
+    "dev:weapp": "cd docs/weapp && npm run dev"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^20.0.0"
+  }
+}
