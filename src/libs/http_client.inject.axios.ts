@@ -1,8 +1,7 @@
 // @ts-ignore
 import axios, { CancelTokenSource } from "axios";
 
-import { Result } from "@/libs/result";
-
+import { Result } from "./result";
 import { HttpClientCore } from "./http_client";
 
 export function injectHttpClient(store: HttpClientCore) {

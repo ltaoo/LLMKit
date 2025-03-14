@@ -1,7 +1,7 @@
-import { BaseDomain, Handler } from "@/libs/base";
-import { Result } from "@/libs/result";
-import { JSONObject } from "@/libs/types";
-import { query_stringify } from "@/libs/utils";
+import { BaseDomain, Handler } from "./base";
+import { Result } from "./result";
+import { JSONObject } from "./types";
+import { query_stringify } from "./utils";
 
 enum Events {
   StateChange,

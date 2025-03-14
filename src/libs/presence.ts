@@ -1,7 +1,7 @@
 /**
  * @file 支持动画的 Popup
  */
-import { BaseDomain, Handler } from "@/libs/base";
+import { BaseDomain, Handler } from "./base";
 
 enum Events {
   StateChange,

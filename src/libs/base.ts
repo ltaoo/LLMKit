@@ -1,7 +1,7 @@
 /**
  * 注册的监听器
  */
-import mitt, { EventType, Handler } from "@/libs/mitt";
+import mitt, { EventType, Handler } from "./mitt";
 
 let _uid = 0;
 export function uid() {

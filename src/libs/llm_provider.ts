@@ -1,6 +1,6 @@
-import { base, Handler } from "@/libs/base";
-import { Result } from "@/libs/result";
-import { ObjectFieldCore } from "@/libs/form";
+import { base, Handler } from "./base";
+import { Result } from "./result";
+import { ObjectFieldCore } from "./form";
 
 /**
  * @file 管理 LLM 厂商及配置信息

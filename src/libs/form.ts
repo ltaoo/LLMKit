@@ -1,6 +1,6 @@
-import { base, Handler } from "@/libs/base";
-import { Result } from "@/libs/result";
-import { BizError } from "@/libs/biz_error";
+import { base, Handler } from "./base";
+import { Result } from "./result";
+import { BizError } from "./biz_error";
 
 // import { FormInputInterface } from "./types";
 

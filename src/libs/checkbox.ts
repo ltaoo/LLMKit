@@ -1,5 +1,5 @@
-import { BaseDomain, Handler } from "@/libs/base";
-import { PresenceCore } from "@/libs/presence";
+import { BaseDomain, Handler } from "./base";
+import { PresenceCore } from "./presence";
 
 enum Events {
   StateChange,

@@ -1,0 +1,52 @@
+{
+  "name": "file-watch",
+  "version": "0.1.0",
+  "description": "",
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "tauri": "tauri"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@milkdown/core": "^7.6.4",
+    "@milkdown/ctx": "^7.6.4",
+    "@milkdown/kit": "^7.6.4",
+    "@milkdown/preset-commonmark": "^7.6.4",
+    "@milkdown/prose": "^7.6.4",
+    "@milkdown/theme-nord": "^7.6.4",
+    "@milkdown/transformer": "^7.6.4",
+    "@prosemirror-adapter/solid": "^0.4.0",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-shell": "^2",
+    "blurhash": "^2.0.5",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dayjs": "^1.11.13",
+    "lodash": "^4.17.21",
+    "lucide-solid": "^0.462.0",
+    "mitt": "^3.0.1",
+    "path-to-regexp": "^8.2.0",
+    "qs": "^6.13.1",
+    "solid-js": "^1.7.8",
+    "url-parse": "^1.5.10"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@tauri-apps/cli": "^2",
+    "@types/node": "^22.10.1",
+    "@types/qs": "^6.9.17",
+    "@types/url-parse": "^1.4.11",
+    "autoprefixer": "^10.4.20",
+    "jsdom": "^26.0.0",
+    "tailwind-merge": "^2.6.0",
+    "tailwindcss": "^4.0.0",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.7.2",
+    "vite": "^6.2.2",
+    "vite-plugin-solid": "^2.8.0",
+    "vitest": "^3.0.4"
+  }
+}

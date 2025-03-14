@@ -1,5 +1,5 @@
-import { BaseDomain, Handler } from "@/libs/base";
-import { FormInputInterface } from "@/libs/form";
+import { BaseDomain, Handler } from "./base";
+import { FormInputInterface } from "./form";
 
 enum Events {
   Change,

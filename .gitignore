@@ -1,4 +1,6 @@
 node_modules
 dist
 
+# 忽略所有层级的 .DS_Store 文件
 .DS_Store
+**/.DS_Store

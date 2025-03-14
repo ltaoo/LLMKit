@@ -1,7 +1,7 @@
-import { LLMProviderCore, LLMProviderModelCore } from "@/libs/llm_provider";
-import { ObjectFieldCore, SingleFieldCore } from "@/libs/form";
-import { InputCore } from "@/libs/input";
-import { CheckboxCore } from "@/libs/checkbox";
+import { LLMProviderCore, LLMProviderModelCore } from "./libs/llm_provider";
+import { ObjectFieldCore, SingleFieldCore } from "./libs/form";
+import { InputCore } from "./libs/input";
+import { CheckboxCore } from "./libs/checkbox";
 
 export const LLMProviders = [
   LLMProviderCore({
