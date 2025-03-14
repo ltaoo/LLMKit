@@ -8,7 +8,7 @@ import { ObjectFieldCore } from "./form";
 import { ChatBox, ChatBoxPayload } from "./chatbox";
 import { LLMService } from "./llm_service";
 
-type AgentCoreProps = {
+type LLMAgentCoreProps = {
   id: string;
   name: string;
   desc: string;
@@ -18,14 +18,14 @@ type AgentCoreProps = {
   builder: (resp: any) => ChatBoxPayload;
 };
 
-export function AgentCore(props: AgentCoreProps) {
+export function LLMAgentCore(props: LLMAgentCoreProps) {
   let _id = props.id;
   let _name = props.name;
   let _desc = props.desc;
   let _prompt = props.prompt;
   let _builder = props.builder;
   let _responseHandler = props.responseHandler;
-  let _llm_payload = { ...AgentCore.DefaultLLM };
+  let _llm_payload = { ...LLMAgentCore.DefaultLLM };
   let _llm_service: LLMService | null = null;
   let _llm_store = LLMProviderStore({
     providers: [],
@@ -214,35 +214,35 @@ export function AgentCore(props: AgentCoreProps) {
   };
 }
 
-AgentCore.DefaultPayload = {
+LLMAgentCore.DefaultPayload = {
   name: "",
   desc: "",
   prompt: "",
 };
-AgentCore.DefaultLLM = {
+LLMAgentCore.DefaultLLM = {
   provider_id: "deepseek",
   model_id: "deepseek-chat",
   extra: {},
 };
-AgentCore.SetDefaultLLM = (llm: {
+LLMAgentCore.SetDefaultLLM = (llm: {
   provider_id: string;
   model_id: string;
   extra: Record<string, any>;
 }) => {
-  AgentCore.DefaultLLM = llm;
+  LLMAgentCore.DefaultLLM = llm;
 };
 
-export type AgentCore = ReturnType<typeof AgentCore>;
+export type LLMAgentCore = ReturnType<typeof LLMAgentCore>;
 
-type AgentEditorCoreProps = {
+type LLMAgentEditorCoreProps = {
   llm: LLMProviderStore;
 };
-export function AgentEditorCore(props: AgentEditorCoreProps) {
+export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
   let _id = "";
   let _name = "";
   let _desc = "";
   let _prompt = "";
-  let _agent: AgentCore | null = null;
+  let _agent: LLMAgentCore | null = null;
   let _manager: LLMProviderStore = props.llm;
   let _provider_configure: ObjectFieldCore<any> = (() => {
     // console.log("[STORE] _provider_configure", _agent, _manager.providers);
@@ -327,7 +327,7 @@ export function AgentEditorCore(props: AgentEditorCoreProps) {
     get prompt() {
       return _prompt;
     },
-    findAgentById(id: string): Result<AgentCore> {
+    findAgentById(id: string): Result<LLMAgentCore> {
       return Result.Err("请实现 findAgentById");
     },
     updateName(name: string) {
@@ -339,7 +339,7 @@ export function AgentEditorCore(props: AgentEditorCoreProps) {
     updatePrompt(prompt: string) {
       _prompt = prompt;
     },
-    selectAgent(agent: AgentCore) {
+    selectAgent(agent: LLMAgentCore) {
       const prev_agent_llm = _agent ? { ..._agent.llm } : null;
 
       _id = agent.id;
@@ -499,17 +499,17 @@ export function AgentEditorCore(props: AgentEditorCoreProps) {
   };
 }
 
-type AgentStoreProps = {
-  agents: AgentCore[];
+type LLMAgentStoreProps = {
+  agents: LLMAgentCore[];
   llm_store: LLMProviderStore;
   client: HttpClientCore;
   llm_service: LLMService;
 };
-export function AgentStore(props: AgentStoreProps) {
+export function LLMAgentStore(props: LLMAgentStoreProps) {
   let _agents = props.agents;
   let _client = props.client;
   let _llm_service = props.llm_service;
-  let _editor = AgentEditorCore({ llm: props.llm_store });
+  let _editor = LLMAgentEditorCore({ llm: props.llm_store });
 
   for (let i = 0; i < _agents.length; i += 1) {
     _agents[i].setLLMStore(props.llm_store);
@@ -539,7 +539,7 @@ export function AgentStore(props: AgentStoreProps) {
         llm: agent.llm,
       };
     }),
-    current_agent: AgentCore.DefaultPayload,
+    current_agent: LLMAgentCore.DefaultPayload,
   };
   enum Events {
     AgentChange,
@@ -607,3 +607,5 @@ export function AgentStore(props: AgentStoreProps) {
     },
   };
 }
+
+export type LLMAgentStore = ReturnType<typeof LLMAgentStore>;

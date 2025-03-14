@@ -1,8 +1,10 @@
 import { Result } from "./result";
 import { HttpClientCore } from "./http_client";
 import { LLMService } from "./llm_service";
+import { RequestPayload } from "./request_builder";
 
 type LLMServiceInWebProps = {
+  service: (...args: any[]) => RequestPayload<any>;
   client: HttpClientCore;
 };
 export function LLMServiceInWeb(props: LLMServiceInWebProps): LLMService {
@@ -13,6 +15,7 @@ export function LLMServiceInWeb(props: LLMServiceInWebProps): LLMService {
     apiKey: string;
     extra: Record<string, any>;
   } = LLMServiceInWeb.DefaultPayload;
+  let _service = props.service;
 
   return {
     setPayload(payload: {

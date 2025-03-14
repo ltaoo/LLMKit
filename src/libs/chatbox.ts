@@ -1,13 +1,17 @@
 import { base, Handler } from "./base";
 import { MutableRecord } from "./types";
 
+// 基础类型使用 enum
 export enum ChatBoxPayloadType {
   Text,
   Image,
   Audio,
   Video,
   Error,
+  Custom,
 }
+
+// 基础 payload 类型
 export type ChatBoxPayload = MutableRecord<{
   [ChatBoxPayloadType.Text]: {
     text: string;
@@ -32,7 +36,11 @@ export type ChatBoxPayload = MutableRecord<{
     title: string;
     content: string;
   };
+  [ChatBoxPayloadType.Custom]: {
+    data: any;
+  };
 }>;
+
 type ChatBoxProps = {
   sender: {
     isMe: boolean;

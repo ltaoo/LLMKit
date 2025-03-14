@@ -1,9 +1,15 @@
-import React, { useEffect, useState, ChangeEvent, useMemo } from "react";
+import { useEffect } from "react";
 
 import { base, Handler } from "@/libs/base";
 import { ChatBoxPayloadType } from "@/libs/chatbox";
 
-import { storage, agent_store, llm_store, client, chatroom } from "./store";
+import {
+  storage,
+  agent_store,
+  llm_store,
+  chatroom,
+  ChatBoxPayloadCustomType,
+} from "./store";
 import { useViewModel } from "./hooks";
 
 function AppViewModel() {
@@ -362,6 +368,76 @@ export function App() {
                               }`}
                             >
                               {msg.payload.text}
+                            </div>
+                          );
+                        }
+                        if (msg.payload.type === ChatBoxPayloadType.Custom) {
+                          if (
+                            msg.payload.data.type ===
+                            ChatBoxPayloadCustomType.Vocabulary
+                          ) {
+                            return (
+                              <div className="bg-white rounded-lg shadow-md p-4 max-w-md border border-gray-200">
+                                <div className="space-y-4">
+                                  {/* 翻译部分 */}
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-500 mb-1">
+                                      翻译
+                                    </div>
+                                    <div className="text-base text-gray-800">
+                                      {msg.payload.data.translation}
+                                    </div>
+                                  </div>
+                                  {/* 发音 */}
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-500 mb-1">
+                                      发音
+                                    </div>
+                                    <div className="text-base text-gray-800">
+                                      {msg.payload.data.pronunciation}
+                                    </div>
+                                  </div>
+                                  {/* 例句部分 */}
+                                  <div>
+                                    <div className="text-sm font-medium text-gray-500 mb-1">
+                                      例句
+                                    </div>
+                                    <div className="space-y-2">
+                                      {msg.payload.data.examples.map(
+                                        (example: string, index: number) => (
+                                          <div
+                                            key={index}
+                                            className="text-sm text-gray-700 bg-gray-50 p-2 rounded"
+                                          >
+                                            {example}
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          }
+                        }
+                        if (msg.payload.type === ChatBoxPayloadType.Error) {
+                          return (
+                            <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-w-md">
+                              <div className="flex items-start">
+                                <div className="flex-shrink-0">
+                                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                  </svg>
+                                </div>
+                                <div className="ml-3">
+                                  <h3 className="text-sm font-medium text-red-800 mb-1">
+                                    {msg.payload.title}
+                                  </h3>
+                                  <div className="text-sm text-red-700 whitespace-pre-wrap">
+                                    {msg.payload.content}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           );
                         }

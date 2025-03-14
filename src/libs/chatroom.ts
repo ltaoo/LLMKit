@@ -1,34 +1,11 @@
 import { base, Handler } from "./base";
-import { AgentCore } from "./llm_agent";
+import { LLMAgentCore } from "./llm_agent";
 import { ChatBox, ChatBoxPayloadType } from "./chatbox";
 
 export function ChatRoomCore() {
-  let _agents: AgentCore[] = [];
+  let _agents: LLMAgentCore[] = [];
   let _inputting: string = "";
-  let _boxes: ChatBox[] = [
-    ChatBox({
-      sender: {
-        name: "",
-        isMe: true,
-      },
-      payload: {
-        type: ChatBoxPayloadType.Text,
-        text: "Hello",
-      },
-      created_at: 10001,
-    }),
-    ChatBox({
-      sender: {
-        name: "纠错",
-        isMe: false,
-      },
-      payload: {
-        type: ChatBoxPayloadType.Text,
-        text: "这样的设计更符合现代聊天应用的外观，并且清晰地区分了不同发送者的消息。",
-      },
-      created_at: 10002,
-    }),
-  ];
+  let _boxes: ChatBox[] = [];
 
   const _state = {
     get inputting() {
@@ -65,7 +42,7 @@ export function ChatRoomCore() {
 
   return {
     state: _state,
-    setAgents(agents: AgentCore[]) {
+    setAgents(agents: LLMAgentCore[]) {
       for (let i = 0; i < _agents.length; i += 1) {
         const agent = _agents[i];
         agent.destroy();
@@ -73,7 +50,7 @@ export function ChatRoomCore() {
       _agents = agents;
       bus.emit(Events.StateChange, { ..._state });
     },
-    addAgent(agent: AgentCore) {
+    addAgent(agent: LLMAgentCore) {
       const existing = _agents.find((a) => a.id === agent.id);
       if (existing) {
         return;
@@ -81,7 +58,7 @@ export function ChatRoomCore() {
       _agents.push(agent);
       bus.emit(Events.StateChange, { ..._state });
     },
-    removeAgent(agent: AgentCore) {
+    removeAgent(agent: LLMAgentCore) {
       const index = _agents.findIndex((a) => a.id === agent.id);
       if (index === -1) {
         return;

@@ -4,10 +4,10 @@
   "main": "src/index.ts",
   "scripts": {
     "build": "tsc",
-    "dev:react": "cd docs/react && vite",
-    "dev:vue": "cd docs/vue && vite",
-    "dev:solid": "cd docs/solidjs && vite",
-    "dev:weapp": "cd docs/weapp && npm run dev"
+    "dev:react": "cd examples/react && vite",
+    "dev:vue": "cd examples/vue && vite",
+    "dev:solid": "cd examples/solidjs && vite",
+    "dev:weapp": "cd examples/weapp && npm run dev"
   },
   "dependencies": {},
   "devDependencies": {

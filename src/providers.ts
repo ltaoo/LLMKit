@@ -40,34 +40,6 @@ export const LLMProviders = [
     }),
   }),
   LLMProviderCore({
-    id: "doubao",
-    name: "豆包",
-    logo_uri: "/provider_light_doubao.png",
-    apiProxyAddress: "https://api.deepseek.com",
-    apiKey: "",
-    models: [
-      LLMProviderModelCore({
-        id: "doubao-chat",
-        name: "豆包 Chat",
-        desc: "豆包 Chat 是豆包 提供的一款智能助手，支持多轮对话、知识库问答、代码解释等功能。",
-        tags: ["chat", "assistant"],
-      }),
-    ],
-    configure: new ObjectFieldCore({
-      label: "配置",
-      name: "configure",
-      fields: {
-        stream: new SingleFieldCore({
-          label: "流式输出",
-          name: "stream",
-          input: new CheckboxCore({
-            value: false,
-          }),
-        }),
-      },
-    }),
-  }),
-  LLMProviderCore({
     id: "openai",
     name: "OpenAI",
     logo_uri: "/provider_light_openai.png",
