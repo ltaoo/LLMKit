@@ -2,9 +2,19 @@ import { base, Handler } from "./base";
 import { LLMAgentCore } from "./llm_agent";
 import { ChatBox, ChatBoxPayloadType } from "./chatbox";
 
+export function ChatSessionCore() {
+  let _agents: LLMAgentCore[] = [];
+  let _inputting: string = "";
+  let _boxes: ChatBox[] = [];
+}
+
+export type ChatSessionCore = ReturnType<typeof ChatSessionCore>;
+
 export function ChatRoomCore() {
   let _agents: LLMAgentCore[] = [];
   let _inputting: string = "";
+  let _sessions: ChatSessionCore[] = [];
+  let _session: ChatSessionCore | null = null;
   let _boxes: ChatBox[] = [];
 
   const _state = {
@@ -42,7 +52,7 @@ export function ChatRoomCore() {
 
   return {
     state: _state,
-    setAgents(agents: LLMAgentCore[]) {
+    startChat(agents: LLMAgentCore[]) {
       for (let i = 0; i < _agents.length; i += 1) {
         const agent = _agents[i];
         agent.destroy();
@@ -50,7 +60,7 @@ export function ChatRoomCore() {
       _agents = agents;
       bus.emit(Events.StateChange, { ..._state });
     },
-    addAgent(agent: LLMAgentCore) {
+    addAgentToChat(agent: LLMAgentCore) {
       const existing = _agents.find((a) => a.id === agent.id);
       if (existing) {
         return;

@@ -1,13 +1,13 @@
 # LLMKit
 
-LLMKit 可以帮助你快速搭建一个基于 LLM 的智能助手，框架、视图无关，可在 `React`、`Vue`、`Tauri`、甚至小程序中使用。
+LLMKit 可以帮助你快速搭建一个基于 LLM 的智能助手，框架、视图无关，可在 `React`、`Vue`、`tauri`、甚至小程序中使用。
 
 两个核心实现
 
-- LLMProviderStore，管理多个 LLM 提供商。
+- LLMProviderStore，管理多个 LLM 提供商
 - LLMAgentStore，管理多个 Agent
 
-视图框架无关，所以定制样式非常简单，目前只有一个简单的 `React` 示例，`Vue`、`Tauri` 示例正在开发中。
+视图框架无关，所以定制样式非常简单，目前只有一个简单的 `React` 示例，`Vue`、`tauri` 示例正在开发中。
 
 ## 使用示例
 
@@ -66,10 +66,10 @@ export const agent_store = AgentStore({
 
 ## 效果预览
 
-![](./docs/llm_kit_screenshot1.png)
-对应代码 examples/react/src/App.tsx
+![](./docs/llmkit_screenshot1.png)
+![](./docs/llmkit_screenshot2.png)
 
-代码只有 400 行，大部分是 UI 代码
+对应代码 [examples/react/src/App.tsx](https://github.com/ltaoo/LLMKit/blob/master/examples/react/src/App.tsx)
 
 ## 项目运行
 
