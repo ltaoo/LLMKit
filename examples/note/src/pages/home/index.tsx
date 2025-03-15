@@ -3,18 +3,15 @@
  */
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import { listen } from "@tauri-apps/api/event";
-import { Editor, rootCtx, defaultValueCtx } from "@milkdown/kit/core";
-import { commonmark } from "@milkdown/preset-commonmark";
-import { nord } from "@milkdown/theme-nord";
-// import { ProsemirrorAdapterProvider } from "@prosemirror-adapter/solid";
 
 import { ViewComponent, ViewComponentProps } from "@/store/types";
 import { llm } from "@/store/llm";
-import { agents } from "@/store/agents";
+import { agent_store } from "@/store/agents";
 import { base, Handler } from "@/domains/base";
 import { useViewModel } from "@/hooks";
 
 import "@milkdown/theme-nord/style.css";
+import { ChatBoxPayloadType } from "@llm/libs/chatbox";
 
 // 定义笔记类型
 interface Note {
@@ -30,20 +27,31 @@ function HomeIndexViewModel(props: ViewComponentProps) {
   // const [isEditing, setIsEditing] = createSignal(false);
   let _notes: Note[] = [];
   let _currentNote: Note | null = null;
-  let _editor: Editor | null = null;
   let _editContent = "";
   let _isEditing = false;
+  // 添加选择文本相关的状态
+  let _selection = {
+    text: "",
+    isVisible: false,
+    x: 0,
+    y: 0,
+    range: null as Range | null,
+    rect: null as DOMRect | null,
+    start: 0,
+    end: 0
+  };
+  let _polishedText = "";
 
   const services = {
     // 加载笔记列表
     async loadNotes() {
-      // TODO: 从后端加载笔记列表
       const mockNotes: Note[] = [
         {
           id: "1",
           title: "第一篇笔记",
           content: `# Milkdown Vanilla Commonmark
 
+\n
 > You're scared of a world where you're needed.
 
 This is a demo for using Milkdown with **Vanilla Typescript**.`,
@@ -52,7 +60,7 @@ This is a demo for using Milkdown with **Vanilla Typescript**.`,
         {
           id: "2",
           title: "第二篇笔记",
-          content: "这是第二篇笔记的内容",
+          content: "天上的云朵很美",
           createdAt: Date.now(),
         },
       ];
@@ -64,17 +72,22 @@ This is a demo for using Milkdown with **Vanilla Typescript**.`,
     async selectNote(note: Note) {
       _currentNote = note;
       _isEditing = false;
-      if (!_editor !== null) {
-        _editor?.destroy();
-      }
-      _editor = await Editor.make()
-        .config((ctx) => {
-          ctx.set(rootCtx, "#editor");
-          ctx.set(defaultValueCtx, note.content);
-        })
-        .config(nord)
-        .use(commonmark)
-        .create();
+      _editContent = note.content;
+      // const editor = await Editor.make()
+      //   .config((ctx) => {
+      //     ctx.set(rootCtx, "#editor");
+      //     ctx.set(defaultValueCtx, note.content);
+      //   })
+      //   .config(nord)
+      //   .use(commonmark)
+      //   .create();
+      // _editor = editor;
+      // editor.action((ctx) => {
+      //   const editorView = ctx.get(editorViewCtx);
+      //   let selection = editorView.state.tr.selection;
+      //   console.log(selection);
+      //   // ctx.updateView(ViewUpdate.Focus);
+      // });
       bus.emit(Events.StateChange, { ..._state });
     },
 
@@ -104,6 +117,12 @@ This is a demo for using Milkdown with **Vanilla Typescript**.`,
     get selectedText() {
       return window.getSelection()?.toString() || "";
     },
+    get selection() {
+      return _selection;
+    },
+    get polishedText() {
+      return _polishedText;
+    },
   };
 
   enum Events {
@@ -126,6 +145,11 @@ This is a demo for using Milkdown with **Vanilla Typescript**.`,
       _editContent = _currentNote?.content || "";
       _isEditing = true;
       bus.emit(Events.StateChange, { ..._state });
+      // if (!_editor) {
+      //   return;
+      // }
+      // const v = _editor.ctx.get(editorViewCtx);
+      // console.log(v.state);
     },
     cancelEdit() {
       _isEditing = false;
@@ -137,16 +161,94 @@ This is a demo for using Milkdown with **Vanilla Typescript**.`,
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
+    // 添加文本选择处理方法
+    handleTextSelection() {
+      const selection = window.getSelection();
+      const text = selection?.toString() || "";
+
+      if (text) {
+        const range = selection?.getRangeAt(0);
+        const rect = range?.getBoundingClientRect();
+
+        if (rect) {
+          // 获取选中文本的起始和结束位置
+          const container = range?.startContainer.parentElement;
+          if (container) {
+            const textContent = container.textContent || "";
+            const start = textContent.indexOf(text);
+            const end = start + text.length;
+
+            _selection = {
+              text,
+              isVisible: true,
+              x: rect.left + rect.width / 2,
+              y: rect.top - 40,
+              range: range ?? null,
+              rect,
+              start,
+              end
+            };
+          }
+        }
+      } else {
+        _selection = {
+          text: "",
+          isVisible: false,
+          x: 0,
+          y: 0,
+          range: null,
+          rect: null,
+          start: 0,
+          end: 0
+        };
+      }
+
+      bus.emit(Events.StateChange, { ..._state });
+    },
+
+    // 添加文本操作方法
+    async polishText() {
+      const agent = agent_store.findAgentById("2");
+      if (!agent) {
+        console.error("[PAGE]index - polishText - agent not found");
+        return;
+      }
+      const r = await agent.request(_selection.text);
+      if (r.error) {
+        console.error("[PAGE]index - polishText - error", r.error);
+        return;
+      }
+      const payload = r.data;
+      console.log("[PAGE]index - polishText", payload);
+      if (payload.type === ChatBoxPayloadType.Text) {
+        _polishedText = payload.text;
+        _selection.isVisible = false;
+        bus.emit(Events.StateChange, { ..._state });
+      }
+      console.log("[PAGE]polishText", r.data);
+    },
+    applyPolishedText() {
+      if (_selection.start >= 0 && _selection.end > _selection.start) {
+        const before = _editContent.substring(0, _selection.start);
+        const after = _editContent.substring(_selection.end);
+        _editContent = before + _polishedText + after;
+        
+        // 清除选择状态和润色文本
+        _selection.isVisible = false;
+        _polishedText = "";
+        
+        bus.emit(Events.StateChange, { ..._state });
+      }
+    },
+    async checkText() {
+      // TODO: 调用 AI 接口进行查错
+      console.log("Check text:", _selection.text);
+    },
   };
 }
 
 export const HomeIndexPage: ViewComponent = (props) => {
   const [state, $model] = useViewModel(HomeIndexViewModel, [props]);
-
-  onMount(() => {
-    $model.ready();
-  });
-  onCleanup(() => {});
 
   return (
     <div class="w-full h-screen flex bg-gray-50">
@@ -197,8 +299,8 @@ export const HomeIndexPage: ViewComponent = (props) => {
             }
           >
             <button
-              onClick={() => $model.startEdit()}
               class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              onClick={() => $model.startEdit()}
             >
               编辑
             </button>
@@ -207,46 +309,60 @@ export const HomeIndexPage: ViewComponent = (props) => {
 
         {/* 使用新的内容区域组件 */}
         <div class="flex-1 overflow-y-auto p-6">
-          <div class="relative">
-            {/* 选中文本时显示的工具栏 */}
-            <Show when={state().selectedText}>
-              <div class="absolute top-0 left-0 bg-white shadow-lg rounded-lg p-2 flex gap-2">
-                <button
-                  class="p-1 hover:bg-gray-100 rounded"
-                  onClick={() => {
-                    // 添加粗体
-                    const selection = window.getSelection();
-                    if (selection) {
-                      const range = selection.getRangeAt(0);
-                      const text = range.toString();
-                      const newText = `**${text}**`;
-                    }
-                  }}
-                >
-                  <span class="font-bold">B</span>
-                </button>
-                <button
-                  class="p-1 hover:bg-gray-100 rounded"
-                  onClick={() => {
-                    // 添加斜体
-                    const selection = window.getSelection();
-                    if (selection) {
-                      const range = selection.getRangeAt(0);
-                      const text = range.toString();
-                      const newText = `*${text}*`;
-                      // 更新编辑器内容
-                    }
-                  }}
-                >
-                  <span class="italic">I</span>
-                </button>
-                {/* 可以添加更多格式化按钮 */}
-              </div>
-            </Show>
-
-            {/* Markdown 编辑器 */}
-            <div id="editor"></div>
+          <div
+            class="relative outline-none"
+            contentEditable
+            onMouseUp={() => $model.handleTextSelection()}
+            onKeyUp={() => $model.handleTextSelection()}
+          >
+            {state().editContent}
           </div>
+
+          {/* 修改选择文本后的工具栏 */}
+          <Show when={state().selection.isVisible}>
+            <div
+              class="fixed z-50 bg-white shadow-lg rounded-lg py-2 px-3 flex gap-2 transform -translate-x-1/2 transition-opacity duration-200"
+              style={{
+                left: `${state().selection.x}px`,
+                top: `${state().selection.y}px`,
+                opacity: state().selection.isVisible ? 1 : 0,
+              }}
+            >
+              <button
+                class="px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                onClick={() => $model.polishText()}
+              >
+                润色
+              </button>
+              <button
+                class="px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                onClick={() => $model.checkText()}
+              >
+                查错
+              </button>
+            </div>
+          </Show>
+
+          {/* 添加润色文本显示 */}
+          <Show when={state().polishedText}>
+            <div
+              class="fixed z-40 bg-white shadow-lg rounded-lg p-4 transform -translate-x-1/2 transition-opacity duration-200 max-w-md"
+              style={{
+                left: `${state().selection.x}px`,
+                top: `${state().selection.rect?.bottom || 0 + 10}px`,
+                opacity: state().polishedText ? 1 : 0,
+              }}
+            >
+              <h3 class="text-sm font-medium text-gray-700 mb-2">润色建议：</h3>
+              <p class="text-gray-800">{state().polishedText}</p>
+              <button
+                class="px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded transition-colors"
+                onClick={() => $model.applyPolishedText()}
+              >
+                应用
+              </button>
+            </div>
+          </Show>
         </div>
       </div>
     </div>

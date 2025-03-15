@@ -9,10 +9,6 @@ import { ChatBoxPayload, ChatBoxPayloadType } from "@/libs/chatbox";
 import { LLMServiceInWeb } from "@/libs/llm_service.web";
 import { build_request } from "@/libs/request_builder";
 
-export enum ChatBoxPayloadCustomType {
-  Vocabulary = "vocabulary",
-}
-
 const DEFAULT_CACHE_VALUES = {
   llm_configs: {} as Record<
     string,
@@ -85,7 +81,9 @@ function DefaultAgentBuilder(payload: any): ChatBoxPayload {
     text: payload as string,
   };
 }
-
+export enum ChatBoxPayloadCustomType {
+  Vocabulary = "vocabulary",
+}
 export const agent_store = AgentStore({
   agents: [
     AgentCore({

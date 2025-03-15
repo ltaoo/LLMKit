@@ -21,6 +21,7 @@ import { Result } from "@/domains/result/index";
 import { PageKeys, routes, routesWithPathname } from "./routes";
 import { client } from "./request";
 import { storage } from "./storage";
+import { llm } from "./llm";
 
 export { client, storage };
 export type { PageKeys };
@@ -90,10 +91,7 @@ export const app = new Application({
       history.push("root.home_layout.index");
       return Result.Ok(null);
     }
-    console.log(
-      "[STORE]index - before if (!app.$user.isLogin",
-      app.$user.isLogin
-    );
+    console.log("[STORE]index - before if (!app.$user.isLogin", app.$user.isLogin);
     // if (!app.$user.isLogin) {
     //   app.tip({
     //     text: ["请先登录"],

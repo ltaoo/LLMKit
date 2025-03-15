@@ -14,6 +14,7 @@ type LLMAgentCoreProps = {
   desc: string;
   prompt: string;
   client: HttpClientCore;
+  memorize?: boolean;
   responseHandler: (result: string) => Result<string>;
   builder: (resp: any) => ChatBoxPayload;
 };
@@ -30,6 +31,8 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
   let _llm_store = LLMProviderStore({
     providers: [],
   });
+  /** 是否记忆上下文 */
+  let _memorize = props.memorize ?? true;
   let _messages: { role: string; content: string }[] = [
     {
       role: "system",
@@ -173,7 +176,16 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
       if (!_llm_service) {
         return Result.Err("请先设置 LLM 服务");
       }
-      const r = await _llm_service.request(this.appendMessages(content));
+      const messages = (() => {
+        if (_memorize) {
+          return this.appendMessages(content);
+        }
+        return [
+          { role: "system", content: _prompt },
+          { role: "user", content },
+        ];
+      })();
+      const r = await _llm_service.request(messages);
       if (r.error) {
         return Result.Err(r.error);
       }
@@ -182,15 +194,15 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
         return Result.Err(r2.error);
       }
       const response = r2.data;
-      const box = ChatBox({
-        sender: {
-          name: _name,
-          isMe: false,
-        },
-        payload: _builder(response),
-        created_at: new Date().valueOf(),
-      });
-      return Result.Ok(box);
+      const payload = _builder(response);
+      // const box = ChatBox({
+      //   sender: {
+      //     name: _name,
+      //     isMe: false,
+      //   },
+      //   created_at: new Date().valueOf(),
+      // });
+      return Result.Ok(payload);
     },
     toJSON() {
       return {
@@ -409,7 +421,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
       payload: { provider_id: string; model_id: string },
       options: { silent?: boolean } = {}
     ) {
-      // console.log("[STORE] selectProviderModel", !_agent || !_manager);
+      console.log("[LLMSDK]llm_agent - selectProviderModel", payload);
       if (!_agent || !_manager) {
         console.error("[STORE] 找不到对应的 agent 或 manager");
         bus.emit(Events.Error, new BizError("找不到对应的 agent 或 manager"));

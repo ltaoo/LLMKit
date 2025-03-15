@@ -8,6 +8,9 @@ type LLMServiceInWebProps = {
   client: HttpClientCore;
 };
 export function LLMServiceInWeb(props: LLMServiceInWebProps): LLMService {
+  let _service = props.service;
+  let _client = props.client;
+
   let _payload: {
     provider_id: string;
     model_id: string;
@@ -15,7 +18,6 @@ export function LLMServiceInWeb(props: LLMServiceInWebProps): LLMService {
     apiKey: string;
     extra: Record<string, any>;
   } = LLMServiceInWeb.DefaultPayload;
-  let _service = props.service;
 
   return {
     setPayload(payload: {
@@ -44,24 +46,19 @@ export function LLMServiceInWeb(props: LLMServiceInWebProps): LLMService {
         apiProxyAddress: _payload.apiProxyAddress,
         apiKey: _payload.apiKey,
       };
-      const r = await props.client.post<{
-        code: number;
-        msg: string;
-        data: {
-          id: string;
-          object: string;
-          created: number;
-          model: string;
-          choices: { message: { content: string } }[];
-        };
-      }>("/api/v1/chat", body, {});
+      const payload = await _service(body);
+      console.log("[LLMSDK]llm_service.web - request before request", payload);
+      const r = await _client.post<any>(
+        [payload.hostname, payload.url].join(""),
+        payload.body,
+        {
+          headers: payload.headers,
+        }
+      );
       if (r.error) {
         return Result.Err(r.error.message);
       }
-      if (r.data.code !== 0) {
-        return Result.Err(r.data.msg);
-      }
-      const content = r.data.data.choices[0].message.content;
+      const content = r.data.choices[0].message.content;
       return Result.Ok(content);
     },
   };

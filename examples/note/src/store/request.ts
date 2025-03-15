@@ -1,10 +1,10 @@
 /**
  * @file tauri 请求
  */
-import { HttpClientCore } from "@/domains/http_client/index";
-import { connect } from "@/domains/http_client/connect.tauri";
+import { HttpClientCore } from "@llm/libs/http_client";
+import { injectHttpClient } from "@llm/libs/http_client.inject.tauri";
 
 export const client = new HttpClientCore({
   headers: {},
 });
-connect(client);
+injectHttpClient(client);

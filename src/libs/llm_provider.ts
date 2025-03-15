@@ -1,5 +1,6 @@
 import { base, Handler } from "./base";
 import { Result } from "./result";
+import { BizError } from "./biz_error";
 import { ObjectFieldCore } from "./form";
 
 /**
@@ -363,6 +364,7 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
   enum Events {
     StateChange,
     ProviderChange,
+    Error,
   }
   type TheTypesOfEvents = {
     [Events.StateChange]: typeof _state;
@@ -376,6 +378,7 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
         enabled: boolean;
       }[];
     };
+    [Events.Error]: BizError;
   };
   const bus = base<TheTypesOfEvents>();
 
@@ -463,6 +466,10 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
     }) {
       const value = _values[payload.provider_id];
       if (!value) {
+        bus.emit(
+          Events.Error,
+          new BizError(`找不到对应的 LLM 表单值: ${payload.provider_id}`)
+        );
         return;
       }
       value.updateApiProxyAddress(payload.apiProxyAddress);
@@ -570,6 +577,9 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
       handler: Handler<TheTypesOfEvents[Events.ProviderChange]>
     ) {
       return bus.on(Events.ProviderChange, handler);
+    },
+    onError(handler: Handler<TheTypesOfEvents[Events.Error]>) {
+      return bus.on(Events.Error, handler);
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);

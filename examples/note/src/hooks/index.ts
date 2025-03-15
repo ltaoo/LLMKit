@@ -1,4 +1,4 @@
-import { Accessor, createSignal } from "solid-js";
+import { Accessor, createSignal, onMount } from "solid-js";
 
 type ViewModelFunction = (...args: any[]) => { state: any; ready: () => void; onStateChange: (handler: any) => any };
 export function useViewModel<T extends ViewModelFunction>(
@@ -9,6 +9,10 @@ export function useViewModel<T extends ViewModelFunction>(
   const [state, setState] = createSignal(model.state);
 
   model.onStateChange((v: any) => setState(v));
+  onMount(() => {
+    model.ready();
+  });
+
   // @ts-ignore
   return [state, model];
 }
