@@ -124,14 +124,16 @@ export function ChatRoomCore() {
             bus.emit(Events.StateChange, { ..._state });
             return;
           }
-          const payload = r.data;
           _boxes.push(
             ChatBox({
               sender: {
                 name: agent.name,
                 isMe: false,
               },
-              payload,
+              payload: {
+                type: ChatBoxPayloadType.Text,
+                text: r.data,
+              },
               created_at: new Date().valueOf(),
             })
           );

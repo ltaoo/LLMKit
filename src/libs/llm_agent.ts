@@ -5,7 +5,6 @@ import { HttpClientCore } from "./http_client";
 import { BizError } from "./biz_error";
 import { Result } from "./result";
 import { ObjectFieldCore } from "./form";
-import { ChatBox, ChatBoxPayload } from "./chatbox";
 import { LLMService } from "./llm_service";
 
 type LLMAgentCoreProps = {
@@ -13,10 +12,9 @@ type LLMAgentCoreProps = {
   name: string;
   desc: string;
   prompt: string;
-  client: HttpClientCore;
   memorize?: boolean;
-  responseHandler: (result: string) => Result<string>;
-  builder: (resp: any) => ChatBoxPayload;
+  responseHandler?: (result: string) => Result<string>;
+  builder?: (payload: any) => any;
 };
 
 export function LLMAgentCore(props: LLMAgentCoreProps) {
@@ -25,7 +23,8 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
   let _desc = props.desc;
   let _prompt = props.prompt;
   let _builder = props.builder;
-  let _responseHandler = props.responseHandler;
+  let _responseHandler =
+    props.responseHandler || LLMAgentCore.DefaultAgentResponseHandler;
   let _llm_payload = { ...LLMAgentCore.DefaultLLM };
   let _llm_service: LLMService | null = null;
   let _llm_store = LLMProviderStore({
@@ -193,8 +192,7 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
       if (r2.error) {
         return Result.Err(r2.error);
       }
-      const response = r2.data;
-      const payload = _builder(response);
+      const payload = _builder ? _builder(r2.data) : r2.data;
       return Result.Ok(payload);
     },
     toJSON() {
@@ -235,6 +233,14 @@ LLMAgentCore.SetDefaultLLM = (llm: {
   extra: Record<string, any>;
 }) => {
   LLMAgentCore.DefaultLLM = llm;
+};
+LLMAgentCore.DefaultAgentResponseHandler = (text: string) => {
+  return Result.Ok(text);
+};
+LLMAgentCore.SetDefaultAgentResponseHandler = (
+  handler: (text: string) => Result<string>
+) => {
+  LLMAgentCore.DefaultAgentResponseHandler = handler;
 };
 
 export type LLMAgentCore = ReturnType<typeof LLMAgentCore>;

@@ -83,15 +83,7 @@ export const llm_service = LLMServiceInWeb({
 });
 
 /********************** LLMAgent *****************/
-function DefaultAgentResponseHandler(text: string) {
-  return Result.Ok(text);
-}
-function DefaultAgentBuilder(payload: any): ChatBoxPayload {
-  return {
-    type: ChatBoxPayloadType.Text,
-    text: payload as string,
-  };
-}
+
 export enum ChatBoxPayloadCustomType {
   Vocabulary = "vocabulary",
 }
@@ -103,9 +95,6 @@ export const agent_store = LLMAgentStore({
       desc: "可以对中文进行纠错",
       prompt:
         "你是一个中文纠错专家，请对以下中文进行纠错，并给出纠错后的结果。",
-      client,
-      responseHandler: DefaultAgentResponseHandler,
-      builder: DefaultAgentBuilder,
     }),
     LLMAgentCore({
       id: "2",
@@ -113,9 +102,6 @@ export const agent_store = LLMAgentStore({
       desc: "可以对中文进行润色",
       prompt:
         "你是一个中文润色专家，请对以下中文进行润色，并给出润色后的结果。",
-      client,
-      responseHandler: DefaultAgentResponseHandler,
-      builder: DefaultAgentBuilder,
     }),
     LLMAgentCore({
       id: "3",
@@ -123,18 +109,12 @@ export const agent_store = LLMAgentStore({
       desc: "可以对中文进行翻译成英文",
       prompt:
         "你是一个中文翻译成英文专家，请对以下中文进行翻译成英文，并给出翻译后的结果。",
-      client,
-      responseHandler: DefaultAgentResponseHandler,
-      builder: DefaultAgentBuilder,
     }),
     LLMAgentCore({
       id: "4",
       name: "查询",
       desc: "可以对中文进行查询",
       prompt: "你是一个中文字典，请对以下中文进行查询，并给出查询后的结果。",
-      client,
-      responseHandler: DefaultAgentResponseHandler,
-      builder: DefaultAgentBuilder,
     }),
     LLMAgentCore({
       id: "5",
@@ -157,7 +137,6 @@ export const agent_store = LLMAgentStore({
         "examples": ["渲染内容例句"],
         "text_type": "sentence 或 word"
       }`,
-      client,
       responseHandler: (text: string) => {
         try {
           return Result.Ok(JSON.parse(text));
