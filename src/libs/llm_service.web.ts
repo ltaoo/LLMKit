@@ -47,7 +47,7 @@ export function LLMServiceInWeb(props: LLMServiceInWebProps): LLMService {
         apiKey: _payload.apiKey,
       };
       const payload = await _service(body);
-      console.log("[LLMSDK]llm_service.web - request before request", payload);
+      // console.log("[LLMSDK]llm_service.web - request before request", payload);
       const r = await _client.post<any>(
         [payload.hostname, payload.url].join(""),
         payload.body,
@@ -55,10 +55,11 @@ export function LLMServiceInWeb(props: LLMServiceInWebProps): LLMService {
           headers: payload.headers,
         }
       );
-      if (r.error) {
-        return Result.Err(r.error.message);
+      const r2 = payload.process ? payload.process(r) : r;
+      if (r2.error) {
+        return Result.Err(r2.error);
       }
-      const content = r.data.choices[0].message.content;
+      const content = r2.data.choices[0].message.content;
       return Result.Ok(content);
     },
   };

@@ -124,8 +124,17 @@ export function ChatRoomCore() {
             bus.emit(Events.StateChange, { ..._state });
             return;
           }
-          const box = r.data;
-          _boxes.push(box);
+          const payload = r.data;
+          _boxes.push(
+            ChatBox({
+              sender: {
+                name: agent.name,
+                isMe: false,
+              },
+              payload,
+              created_at: new Date().valueOf(),
+            })
+          );
           bus.emit(Events.StateChange, { ..._state });
         });
       }

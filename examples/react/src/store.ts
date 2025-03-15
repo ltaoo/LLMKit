@@ -1,13 +1,14 @@
-import { LLMProviderStore, AgentStore, AgentCore } from "@/index";
-import { LLMProviders } from "@/providers";
-import { Result } from "@/libs/result";
-import { HttpClientCore } from "@/libs/http_client";
-import { injectHttpClient } from "@/libs/http_client.inject.axios";
-import { StorageCore } from "@/libs/storage";
-import { ChatRoomCore } from "@/libs/chatroom";
-import { ChatBoxPayload, ChatBoxPayloadType } from "@/libs/chatbox";
-import { LLMServiceInWeb } from "@/libs/llm_service.web";
-import { build_request } from "@/libs/request_builder";
+import { LLMAgentStore, LLMAgentCore } from "@llm/libs/llm_agent";
+import { LLMProviderStore } from "@llm/libs/llm_provider";
+import { LLMProviders } from "@llm/providers";
+import { Result } from "@llm/libs/result";
+import { HttpClientCore } from "@llm/libs/http_client";
+import { injectHttpClient } from "@llm/libs/http_client.inject.axios";
+import { StorageCore } from "@llm/libs/storage";
+import { ChatRoomCore } from "@llm/libs/chatroom";
+import { ChatBoxPayload, ChatBoxPayloadType } from "@llm/libs/chatbox";
+import { LLMServiceInWeb } from "@llm/libs/llm_service.web";
+import { build_request } from "@llm/libs/request_builder";
 
 const DEFAULT_CACHE_VALUES = {
   llm_configs: {} as Record<
@@ -56,6 +57,16 @@ export const llm_store = LLMProviderStore({
 /********************** LLM Service *****************/
 const request = build_request({
   hostnames: {},
+  process(r: Result<{ code: number; data: any; message: string }>) {
+    console.log("[STORE]build_request - process", r);
+    if (r.error) {
+      return Result.Err(r.error);
+    }
+    if (r.data.code !== 0) {
+      return Result.Err(r.data.message);
+    }
+    return Result.Ok(r.data.data);
+  },
 });
 function requestLLMProvider(payload: {
   extra: Record<string, any>;
@@ -84,9 +95,9 @@ function DefaultAgentBuilder(payload: any): ChatBoxPayload {
 export enum ChatBoxPayloadCustomType {
   Vocabulary = "vocabulary",
 }
-export const agent_store = AgentStore({
+export const agent_store = LLMAgentStore({
   agents: [
-    AgentCore({
+    LLMAgentCore({
       id: "1",
       name: "纠错",
       desc: "可以对中文进行纠错",
@@ -96,7 +107,7 @@ export const agent_store = AgentStore({
       responseHandler: DefaultAgentResponseHandler,
       builder: DefaultAgentBuilder,
     }),
-    AgentCore({
+    LLMAgentCore({
       id: "2",
       name: "润色",
       desc: "可以对中文进行润色",
@@ -106,7 +117,7 @@ export const agent_store = AgentStore({
       responseHandler: DefaultAgentResponseHandler,
       builder: DefaultAgentBuilder,
     }),
-    AgentCore({
+    LLMAgentCore({
       id: "3",
       name: "翻译成英文",
       desc: "可以对中文进行翻译成英文",
@@ -116,7 +127,7 @@ export const agent_store = AgentStore({
       responseHandler: DefaultAgentResponseHandler,
       builder: DefaultAgentBuilder,
     }),
-    AgentCore({
+    LLMAgentCore({
       id: "4",
       name: "查询",
       desc: "可以对中文进行查询",
@@ -125,7 +136,7 @@ export const agent_store = AgentStore({
       responseHandler: DefaultAgentResponseHandler,
       builder: DefaultAgentBuilder,
     }),
-    AgentCore({
+    LLMAgentCore({
       id: "5",
       name: "单词查询",
       desc: "可以对英文单词进行查询",

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
-import { base, Handler } from "@/libs/base";
-import { ChatBoxPayloadType } from "@/libs/chatbox";
+import { base, Handler } from "@llm/libs/base";
+import { ChatBoxPayloadType } from "@llm/libs/chatbox";
 
 import {
   storage,

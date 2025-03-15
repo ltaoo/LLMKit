@@ -195,13 +195,6 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
       }
       const response = r2.data;
       const payload = _builder(response);
-      // const box = ChatBox({
-      //   sender: {
-      //     name: _name,
-      //     isMe: false,
-      //   },
-      //   created_at: new Date().valueOf(),
-      // });
       return Result.Ok(payload);
     },
     toJSON() {
