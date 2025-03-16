@@ -2,7 +2,7 @@
  * @file 下拉菜单
  */
 import { For, createSignal, JSX } from "solid-js";
-import { ChevronRight } from "lucide-solid";
+import ChevronRight from "lucide-solid/icons/chevron-right";
 
 import { DropdownMenuCore } from "@/domains/ui/dropdown-menu";
 import { MenuItemCore } from "@/domains/ui/menu/item";

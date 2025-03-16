@@ -1,5 +1,5 @@
 import { JSX, createSignal, onMount } from "solid-js";
-import { Loader2 } from "lucide-solid";
+import Loader2 from "lucide-solid/icons/loader-2";
 
 import { InputCore } from "@/domains/ui/input";
 import { Input as InputPrimitive } from "@/packages/ui/input";

@@ -471,7 +471,7 @@ export function App() {
                 rows={6}
                 value={state.inputting}
                 onChange={(event) => {
-                  model.ui.$chatroom.inputting(event.target.value);
+                  model.ui.$chatroom.input(event.target.value);
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {

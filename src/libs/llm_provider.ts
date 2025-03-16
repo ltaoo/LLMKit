@@ -400,14 +400,16 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
     findValueOfProvider(provider_id: string) {
       return _values[provider_id];
     },
-    findProvider(provider_id: string, condition: { enabled: boolean }) {
+    findProviderById(provider_id: string, condition: { enabled: boolean }) {
       if (condition.enabled === true) {
-        return _providers.find((p) => {
-          const value = _values[p.id];
-          return value.enabled && p.id === provider_id;
-        });
+        return (
+          _providers.find((p) => {
+            const value = _values[p.id];
+            return value.enabled && p.id === provider_id;
+          }) ?? null
+        );
       }
-      return _providers.find((p) => p.id === provider_id);
+      return _providers.find((p) => p.id === provider_id) ?? null;
     },
     /** 使用外部数据更新 state */
     patch(

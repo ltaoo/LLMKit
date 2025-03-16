@@ -2,7 +2,8 @@
 import { Match, Switch, createSignal, onMount } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
 import { effect } from "solid-js/web";
-import { Image, ImageOff } from "lucide-solid";
+import Image from "lucide-solid/icons/image";
+import ImageOff from "lucide-solid/icons/image-off";
 
 import { ImageCore, ImageStep } from "@/domains/ui/image";
 import { connect } from "@/domains/ui/image/connect.web";

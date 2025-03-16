@@ -3,7 +3,7 @@
  */
 import { JSX } from "solid-js";
 import { VariantProps, cva } from "class-variance-authority";
-import { Loader } from "lucide-solid";
+import Loader from "lucide-solid/icons/loader";
 
 import { ButtonCore } from "@/domains/ui/button";
 import * as ButtonPrimitive from "@/packages/ui/button";

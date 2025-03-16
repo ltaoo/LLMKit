@@ -3,7 +3,10 @@
  */
 import { Show, createSignal } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
-import { AlertCircle, ArrowDown, Bird, Loader } from "lucide-solid";
+import AlertCircle from "lucide-solid/icons/alert-circle";
+import ArrowDown from "lucide-solid/icons/arrow-down";
+import Bird from "lucide-solid/icons/bird";
+import Loader from "lucide-solid/icons/loader";
 
 import { ListCore } from "@/domains/list";
 import { cn } from "@/utils";

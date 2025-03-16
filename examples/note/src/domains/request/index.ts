@@ -83,7 +83,7 @@ export class RequestCore<F extends FetchFunction, P = UnpackedRequestPayload<Ret
   service: F;
   process?: ProcessFunction<Result<UnpackedRequestPayload<ReturnType<F>>>, P>;
   client?: HttpClientCore;
-  delay: null | number = 800;
+  delay: null | number = null;
   loading = false;
   /** 处于请求中的 promise */
   // pending: Promise<UnpackedRequestPayload<ReturnType<F>>> | null = null;

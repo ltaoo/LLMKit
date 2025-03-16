@@ -1,7 +1,7 @@
 import { UnpackedResult } from "@/domains/result/index";
 import { Unpacked } from "@/types";
 
-export type BaseApiResp<T> = {
+export type BizResponse<T> = {
   code: number;
   msg: string;
   data: T;

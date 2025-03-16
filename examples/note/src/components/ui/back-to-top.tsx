@@ -2,7 +2,7 @@
  * @file 回到顶部按钮
  */
 import { Show, createSignal } from "solid-js";
-import { ArrowUp } from "lucide-solid";
+import ArrowUp from "lucide-solid/icons/arrow-up";
 
 import { ScrollViewCore } from "@/domains/ui/scroll-view";
 // import { app } from "@/store";

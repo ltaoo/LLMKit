@@ -10,8 +10,12 @@ export function ChatSessionCore() {
 
 export type ChatSessionCore = ReturnType<typeof ChatSessionCore>;
 
-export function ChatRoomCore() {
-  let _agents: LLMAgentCore[] = [];
+type ChatRoomCoreProps = {
+  agents?: LLMAgentCore[];
+};
+
+export function ChatRoomCore(props: ChatRoomCoreProps) {
+  let _agents: LLMAgentCore[] = props.agents ?? [];
   let _inputting: string = "";
   let _sessions: ChatSessionCore[] = [];
   let _session: ChatSessionCore | null = null;
@@ -80,7 +84,7 @@ export function ChatRoomCore() {
       _agents = [];
       bus.emit(Events.StateChange, { ..._state });
     },
-    inputting(text: string) {
+    input(text: string) {
       _inputting = text;
       bus.emit(Events.StateChange, { ..._state });
     },
@@ -130,10 +134,13 @@ export function ChatRoomCore() {
                 name: agent.name,
                 isMe: false,
               },
-              payload: {
-                type: ChatBoxPayloadType.Text,
-                text: r.data,
-              },
+              payload:
+                r.data.type === undefined
+                  ? {
+                      type: ChatBoxPayloadType.Text,
+                      text: r.data,
+                    }
+                  : r.data,
               created_at: new Date().valueOf(),
             })
           );

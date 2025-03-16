@@ -3,7 +3,7 @@
  */
 import { Show } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
-import { X } from "lucide-solid";
+import X from "lucide-solid/icons/x";
 
 import { PopoverCore } from "@/domains/ui/popover";
 import { Align, Side } from "@/domains/ui/popper";

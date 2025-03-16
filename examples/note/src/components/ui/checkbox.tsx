@@ -1,9 +1,9 @@
-import { Check } from "lucide-solid";
+import { JSX } from "solid-js/jsx-runtime";
+import Check from "lucide-solid/icons/check";
 
 import { CheckboxCore } from "@/domains/ui/checkbox";
 import * as CheckboxPrimitive from "@/packages/ui/checkbox";
 import { cn } from "@/utils";
-import { JSX } from "solid-js/jsx-runtime";
 
 export function Checkbox(props: { store: CheckboxCore } & JSX.HTMLAttributes<HTMLDivElement>) {
   const { id, store } = props;

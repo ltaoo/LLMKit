@@ -2,7 +2,7 @@
  * @file 对话框
  */
 import { createSignal, JSX } from "solid-js";
-import { LucideX as X } from "lucide-solid";
+import X from "lucide-solid/icons/x";
 
 import * as DialogPrimitive from "@/packages/ui/dialog";
 import { Show } from "@/packages/ui/show";

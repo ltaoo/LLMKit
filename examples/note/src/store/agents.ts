@@ -4,8 +4,9 @@ import { ChatBoxPayload, ChatBoxPayloadType } from "@llm/libs/chatbox";
 import { LLMServiceInWeb } from "@llm/libs/llm_service.web";
 import { build_request } from "@llm/libs/request_builder";
 
-import { llm } from "./llm";
+import { llm_store } from "./llm";
 import { client } from "./request";
+import { storage } from "./storage";
 
 /********************** LLM Service *****************/
 const request = build_request({
@@ -43,7 +44,7 @@ export const agent_store = LLMAgentStore({
       id: "2",
       name: "润色",
       desc: "可以对中文进行润色",
-      prompt: "你是一个中文润色专家，请对以下中文进行润色，并给出润色后的结果。",
+      prompt: "你是一个中文润色专家，请对以下中文进行润色，并给出润色后的结果。请不要考虑语句是否合理，只需要润色即可。",
       memorize: false,
     }),
     LLMAgentCore({
@@ -79,6 +80,7 @@ export const agent_store = LLMAgentStore({
         "examples": ["渲染内容例句"],
         "text_type": "sentence 或 word"
       }`,
+      memorize: false,
       responseHandler: (text: string) => {
         try {
           return Result.Ok(JSON.parse(text));
@@ -98,7 +100,11 @@ export const agent_store = LLMAgentStore({
       },
     }),
   ],
-  llm_store: llm,
+  llm_store: llm_store,
   client,
   llm_service,
 });
+
+const cached = storage.get("agent_configs");
+console.log("[STORE]agents - cached", cached);
+agent_store.patch(cached);

@@ -7,12 +7,17 @@ import { Result } from "./result";
 import { ObjectFieldCore } from "./form";
 import { LLMService } from "./llm_service";
 
+enum LLMAgentType {
+  Chat,
+}
+
 type LLMAgentCoreProps = {
   id: string;
   name: string;
-  desc: string;
+  desc?: string;
   prompt: string;
   memorize?: boolean;
+  builtin?: boolean;
   responseHandler?: (result: string) => Result<string>;
   builder?: (payload: any) => any;
 };
@@ -22,10 +27,12 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
   let _name = props.name;
   let _desc = props.desc;
   let _prompt = props.prompt;
+  let _builtin = props.builtin ?? false;
   let _builder = props.builder;
   let _responseHandler =
     props.responseHandler || LLMAgentCore.DefaultAgentResponseHandler;
   let _llm_payload = { ...LLMAgentCore.DefaultLLM };
+  let _type = LLMAgentType.Chat;
   let _llm_service: LLMService | null = null;
   let _llm_store = LLMProviderStore({
     providers: [],
@@ -163,6 +170,9 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
         extra: payload.extra,
       });
     },
+    setMemorize(memorize: boolean) {
+      _memorize = memorize;
+    },
     setMessages(messages: { role: string; content: string }[]) {
       _messages = messages;
     },
@@ -171,7 +181,7 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
       return _messages;
     },
     /** 调用 LLM 并返回结果 */
-    async request(content: string) {
+    async request<T extends any>(content: string) {
       if (!_llm_service) {
         return Result.Err("请先设置 LLM 服务");
       }
@@ -193,7 +203,7 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
         return Result.Err(r2.error);
       }
       const payload = _builder ? _builder(r2.data) : r2.data;
-      return Result.Ok(payload);
+      return Result.Ok(payload as T);
     },
     toJSON() {
       return {
@@ -201,6 +211,11 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
         name: _name,
         desc: _desc,
         prompt: _prompt,
+        type: _type,
+        builtin: _builtin,
+        config: {
+          memorize: _memorize,
+        },
         llm: _llm_payload,
       };
     },
@@ -225,7 +240,7 @@ LLMAgentCore.DefaultPayload = {
 LLMAgentCore.DefaultLLM = {
   provider_id: "deepseek",
   model_id: "deepseek-chat",
-  extra: {},
+  extra: {} as Record<string, any>,
 };
 LLMAgentCore.SetDefaultLLM = (llm: {
   provider_id: string;
@@ -355,12 +370,12 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
 
       _id = agent.id;
       _name = agent.name;
-      _desc = agent.desc;
+      _desc = agent.desc ?? "";
       _prompt = agent.prompt;
       _agent = agent;
 
       const extra = { ...agent.llm.extra };
-      const existing = _manager.findProvider(agent.llm.provider_id, {
+      const existing = _manager.findProviderById(agent.llm.provider_id, {
         enabled: true,
       });
       const llm = (() => {
@@ -393,7 +408,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
       ) {
         console.log("[STORE] selectAgent need update configure");
         _provider_configure.destroy();
-        let provider = _manager.findProvider(llm.provider_id, {
+        let provider = _manager.findProviderById(llm.provider_id, {
           enabled: true,
         });
         if (provider) {
@@ -577,7 +592,7 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
       return _agents;
     },
     findAgentById(id: string) {
-      return _agents.find((agent) => agent.id === id);
+      return _agents.find((agent) => agent.id === id) ?? null;
     },
     patch(
       agents: Record<

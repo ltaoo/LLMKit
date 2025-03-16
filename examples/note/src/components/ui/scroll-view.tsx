@@ -2,7 +2,8 @@
  * @file 可滚动容器，支持下拉刷新、滚动监听等
  */
 import { JSX, createSignal } from "solid-js";
-import { ArrowDown, Loader2 } from "lucide-solid";
+import ArrowDown from "lucide-solid/icons/arrow-down";
+import Loader2 from "lucide-solid/icons/loader-2";
 
 import * as ScrollViewPrimitive from "@/packages/ui/scroll-view";
 import { ScrollViewCore } from "@/domains/ui/scroll-view";

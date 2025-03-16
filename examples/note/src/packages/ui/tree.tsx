@@ -1,9 +1,9 @@
+import { Show, createSignal } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
+import ChevronRight from "lucide-solid/icons/chevron-right";
 
 import { TreeCore } from "@/domains/ui/tree";
-import { Show, createSignal } from "solid-js";
 import { cn } from "@/utils";
-import { ArrowRight, ChevronRight } from "lucide-solid";
 
 const Root = (props: { store: TreeCore } & JSX.HTMLAttributes<HTMLDivElement>) => {
   return <ul class={cn("ant-tree tree", props.class)}>{props.children}</ul>;

@@ -21,7 +21,7 @@ import { Result } from "@/domains/result/index";
 import { PageKeys, routes, routesWithPathname } from "./routes";
 import { client } from "./request";
 import { storage } from "./storage";
-import { llm } from "./llm";
+import { llm_store } from "./llm";
 
 export { client, storage };
 export type { PageKeys };

@@ -1,7 +1,7 @@
 import { request_factory } from "@/domains/request/utils";
 import { Result } from "@/domains/result";
 
-import { BaseApiResp } from "./types";
+import { BizResponse } from "./types";
 
 export const request = request_factory({
   hostnames: {
@@ -9,7 +9,7 @@ export const request = request_factory({
     test: "",
     prod: "",
   },
-  process<T>(r: Result<BaseApiResp<T>>) {
+  process<T>(r: Result<BizResponse<T>>) {
     console.log("request result", r);
     if (r.error) {
       return Result.Err(r.error.message);

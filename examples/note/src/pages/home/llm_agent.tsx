@@ -1,14 +1,18 @@
 import { For, Show } from "solid-js";
+import { WebviewWindow, getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
 import { base, Handler } from "@llm/libs/base";
+import { LLMAgentCore } from "@llm/libs/llm_agent";
 
 import { agent_store } from "@/store/agents";
-import { llm } from "@/store/llm";
+import { llm_store } from "@/store/llm";
 import { ViewComponentProps } from "@/store/types";
 import { DialogCore } from "@/domains/ui";
 import { useViewModel } from "@/hooks";
 import { Button, Dialog, ListView } from "@/components/ui";
 import { DynamicForm } from "@/components/ui/dynamci-form";
+import { RequestCore } from "@/domains/request";
+import { show_chat_window } from "@/biz/services";
 
 function LLMAgentManagerViewModel(props: ViewComponentProps) {
   const { storage } = props;
@@ -17,9 +21,14 @@ function LLMAgentManagerViewModel(props: ViewComponentProps) {
     title: "编辑代理",
   });
 
+  const _requests = {
+    chat_window: {
+      show: new RequestCore(show_chat_window, { client: props.client }),
+    },
+  };
   const _state = {
     get enabledProviders() {
-      return llm.state.enabledProviders;
+      return llm_store.state.enabledProviders;
     },
     get agents() {
       return agent_store.state.agents;
@@ -65,9 +74,26 @@ function LLMAgentManagerViewModel(props: ViewComponentProps) {
       //     [payload.id]: payload,
       //   });
       // });
-      const cached = storage.get("agent_configs");
-      console.log("[STORE]agents - cached", cached);
-      agent_store.patch(cached);
+    },
+    async openChatWindow(agent: { id: string; name: string }) {
+      console.log("[STORE]openChatWindow", agent);
+
+      const r = await _requests.chat_window.show.run({
+        url: "/chat?id=" + agent.id,
+      });
+      if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
+        return;
+      }
+      // const webview = new WebviewWindow("chat", {
+      //   title: agent.name,
+      //   width: 360,
+      //   height: 800,
+      //   url: "/chat?id=" + agent.id,
+      // });
+      // webview.show();
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -91,15 +117,25 @@ export function LLMAgentManagerPage(props: ViewComponentProps) {
                   </div>
                   <h2 class="text-lg font-semibold text-gray-800">{agent.name}</h2>
                 </div>
-                <button
-                  class="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
-                  onClick={() => {
-                    $model.ui.$agents.selectAgent({ id: agent.id });
-                    $model.ui.$agent_dialog.show();
-                  }}
-                >
-                  编辑
-                </button>
+                <div class="flex items-center gap-1">
+                  <button
+                    class="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                    onClick={() => {
+                      $model.ui.$agents.selectAgent({ id: agent.id });
+                      $model.ui.$agent_dialog.show();
+                    }}
+                  >
+                    编辑
+                  </button>
+                  <button
+                    class="px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                    onclick={() => {
+                      $model.openChatWindow(agent);
+                    }}
+                  >
+                    对话
+                  </button>
+                </div>
               </div>
               <div class="space-y-2">
                 <div>
@@ -108,7 +144,7 @@ export function LLMAgentManagerPage(props: ViewComponentProps) {
                 </div>
                 <div>
                   <div class="text-sm font-medium text-gray-700 mb-1">提示词</div>
-                  <div class="text-gray-600 text-sm whitespace-pre-wrap bg-gray-50 rounded-md p-2 max-h-[120px] overflow-y-auto">
+                  <div class="text-gray-600 text-sm whitespace-pre-wrap bg-gray-50 rounded-md p-2 max-h-[120px] overflow-y-auto line-clamp-3">
                     {agent.prompt}
                   </div>
                 </div>

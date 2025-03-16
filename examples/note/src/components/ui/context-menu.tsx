@@ -2,7 +2,7 @@
  * @file 右键菜单
  */
 import { For, createContext, createSignal, onMount, JSX } from "solid-js";
-import { ChevronRight } from "lucide-solid";
+import ChevronRight from "lucide-solid/icons/chevron-right";
 
 import { ContextMenuCore } from "@/domains/ui/context-menu";
 import * as Menu from "@/packages/ui/menu";

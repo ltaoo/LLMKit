@@ -33,6 +33,10 @@ const configure = {
           },
         },
       },
+      chat: {
+        title: "对话",
+        pathname: "/chat",
+      },
       login: {
         title: "登录",
         pathname: "/login",

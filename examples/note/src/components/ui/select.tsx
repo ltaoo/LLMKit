@@ -3,7 +3,6 @@
  */
 import { For, Show, createSignal } from "solid-js";
 import { JSX } from "solid-js/jsx-runtime";
-import { Check, ChevronDown } from "lucide-solid";
 
 import { SelectCore } from "@/domains/ui";
 import * as SelectPrimitive from "@/packages/ui/select";

@@ -2,7 +2,7 @@ import { For, Show, onMount } from "solid-js";
 
 import { base, Handler } from "@llm/libs/base";
 
-import { llm } from "@/store/llm";
+import { llm_store } from "@/store/llm";
 import { ViewComponentProps } from "@/store/types";
 import { useViewModel } from "@/hooks";
 
@@ -11,7 +11,7 @@ function LLMProviderManagerViewModel(props: ViewComponentProps) {
 
   const _state = {
     get providers() {
-      return llm.state.providers;
+      return llm_store.state.providers;
     },
   };
 
@@ -26,26 +26,23 @@ function LLMProviderManagerViewModel(props: ViewComponentProps) {
   return {
     state: _state,
     ui: {
-      $manager: llm,
+      $manager: llm_store,
     },
     ready() {
-      llm.onStateChange((values) => {
+      llm_store.onStateChange((values) => {
         // console.log(values.JSON);
         bus.emit(Events.StateChange, { ..._state });
       });
-      llm.onError((error) => {
+      llm_store.onError((error) => {
         console.error(error.message);
       });
-      llm.onProviderChange((payload) => {
+      llm_store.onProviderChange((payload) => {
         // console.log("[PAGE] onProviderChange", payload);
         storage.set("llm_configs", {
           ...storage.get("llm_configs"),
           [payload.id]: payload,
         });
       });
-      const cached = storage.get("llm_configs");
-      console.log("[PAGE] before llm.patch", cached);
-      llm.patch(cached);
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
