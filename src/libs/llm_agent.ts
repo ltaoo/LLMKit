@@ -16,8 +16,13 @@ type LLMAgentCoreProps = {
   name: string;
   desc?: string;
   prompt: string;
-  memorize?: boolean;
+  config?: Record<string, any>;
   builtin?: boolean;
+  llm_config?: {
+    provider_id: string;
+    model_id: string;
+    extra: Record<string, any>;
+  };
   responseHandler?: (result: string) => Result<string>;
   builder?: (payload: any) => any;
 };
@@ -31,14 +36,16 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
   let _builder = props.builder;
   let _responseHandler =
     props.responseHandler || LLMAgentCore.DefaultAgentResponseHandler;
-  let _llm_payload = { ...LLMAgentCore.DefaultLLM };
+  let _llm_payload = props.llm_config
+    ? { ...props.llm_config }
+    : { ...LLMAgentCore.DefaultLLM };
   let _type = LLMAgentType.Chat;
   let _llm_service: LLMService | null = null;
   let _llm_store = LLMProviderStore({
     providers: [],
   });
   /** 是否记忆上下文 */
-  let _memorize = props.memorize ?? true;
+  let _memorize = props.config?.memorize ?? true;
   let _messages: { role: string; content: string }[] = [
     {
       role: "system",
@@ -262,6 +269,7 @@ export type LLMAgentCore = ReturnType<typeof LLMAgentCore>;
 
 type LLMAgentEditorCoreProps = {
   llm: LLMProviderStore;
+  agent: LLMAgentStore;
 };
 export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
   let _id = "";
@@ -269,11 +277,19 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
   let _desc = "";
   let _prompt = "";
   let _agent: LLMAgentCore | null = null;
-  let _manager: LLMProviderStore = props.llm;
+  let _llm_store: LLMProviderStore = props.llm;
+  let _agent_store: LLMAgentStore = props.agent;
   let _provider_configure: ObjectFieldCore<any> = (() => {
     // console.log("[STORE] _provider_configure", _agent, _manager.providers);
-    const provider = _manager.providers[0];
-    return provider.configure;
+    const provider = _llm_store.providers[0];
+    if (provider) {
+      return provider.configure;
+    }
+    return new ObjectFieldCore({
+      label: "配置",
+      name: "configure",
+      fields: {},
+    });
   })();
 
   _provider_configure.onChange((value) => {
@@ -303,7 +319,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
       return this.llm.model_id;
     },
     get llm() {
-      if (!_agent || !_manager) {
+      if (!_agent || !_llm_store) {
         return {
           provider_id: "",
           model_id: "",
@@ -353,9 +369,6 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
     get prompt() {
       return _prompt;
     },
-    findAgentById(id: string): Result<LLMAgentCore> {
-      return Result.Err("请实现 findAgentById");
-    },
     updateName(name: string) {
       _name = name;
     },
@@ -364,6 +377,9 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
     },
     updatePrompt(prompt: string) {
       _prompt = prompt;
+    },
+    setAgentStore(agent_store: LLMAgentStore) {
+      _agent_store = agent_store;
     },
     selectAgent(agent: LLMAgentCore) {
       const prev_agent_llm = _agent ? { ..._agent.llm } : null;
@@ -375,14 +391,14 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
       _agent = agent;
 
       const extra = { ...agent.llm.extra };
-      const existing = _manager.findProviderById(agent.llm.provider_id, {
+      const existing = _llm_store.findProviderById(agent.llm.provider_id, {
         enabled: true,
       });
       const llm = (() => {
         if (existing) {
           return agent.llm;
         }
-        const enabledProvider = _manager.firstEnabledProvider;
+        const enabledProvider = _llm_store.firstEnabledProvider;
         if (enabledProvider === null) {
           return null;
         }
@@ -408,7 +424,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
       ) {
         console.log("[STORE] selectAgent need update configure");
         _provider_configure.destroy();
-        let provider = _manager.findProviderById(llm.provider_id, {
+        let provider = _llm_store.findProviderById(llm.provider_id, {
           enabled: true,
         });
         if (provider) {
@@ -436,7 +452,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
       options: { silent?: boolean } = {}
     ) {
       console.log("[LLMSDK]llm_agent - selectProviderModel", payload);
-      if (!_agent || !_manager) {
+      if (!_agent || !_llm_store) {
         console.error("[STORE] 找不到对应的 agent 或 manager");
         bus.emit(Events.Error, new BizError("找不到对应的 agent 或 manager"));
         return;
@@ -452,7 +468,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
         console.log(
           "[STORE] selectProviderModel need update LLM configure form"
         );
-        const provider = _manager.providers.find(
+        const provider = _llm_store.providers.find(
           (p) => p.id === payload.provider_id
         );
         if (provider) {
@@ -480,7 +496,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
         bus.emit(Events.StateChange, { ..._state });
       }
     },
-    selectProviderModelForAgent(
+    async selectProviderModelForAgent(
       payload: {
         agent_id: string;
         provider_id: string;
@@ -488,7 +504,11 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
       },
       options: { silent?: boolean } = {}
     ) {
-      const r = this.findAgentById(payload.agent_id);
+      if (!_agent_store) {
+        bus.emit(Events.Error, new BizError("找不到对应的 agent"));
+        return;
+      }
+      const r = await _agent_store.findAgentById(payload.agent_id);
       if (r.error) {
         console.error(r.error.message);
         bus.emit(Events.Error, r.error);
@@ -513,7 +533,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
         },
       };
     },
-    onChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
+    onAgentChange(handler: Handler<TheTypesOfEvents[Events.Change]>) {
       return bus.on(Events.Change, handler);
     },
     onError(handler: Handler<TheTypesOfEvents[Events.Error]>) {
@@ -532,40 +552,33 @@ type LLMAgentStoreProps = {
   llm_service: LLMService;
 };
 export function LLMAgentStore(props: LLMAgentStoreProps) {
-  let _agents = props.agents;
-  let _client = props.client;
-  let _llm_service = props.llm_service;
-  let _editor = LLMAgentEditorCore({ llm: props.llm_store });
-
-  for (let i = 0; i < _agents.length; i += 1) {
-    _agents[i].setLLMStore(props.llm_store);
-    _agents[i].setLLMService(props.llm_service);
-  }
-  _editor.findAgentById = (id: string) => {
-    const agent = _agents.find((agent) => agent.id === id);
-    if (!agent) {
-      return Result.Err("找不到对应的 agent");
-    }
-    return Result.Ok(agent);
+  const _internal = {
+    agents: [...props.agents],
   };
-  _editor.onChange((payload) => {
-    bus.emit(Events.AgentChange, payload);
-  });
-  _editor.onStateChange(() => {
-    bus.emit(Events.StateChange, { ..._state });
-  });
+
+  function attachLLMServiceAndOther(agents: LLMAgentCore[]) {
+    for (let i = 0; i < agents.length; i += 1) {
+      agents[i].setLLMStore(props.llm_store);
+      agents[i].setLLMService(props.llm_service);
+    }
+  }
+  attachLLMServiceAndOther(_internal.agents);
 
   const _state = {
-    agents: _agents.map((agent) => {
-      return {
-        id: agent.id,
-        name: agent.name,
-        desc: agent.desc,
-        prompt: agent.prompt,
-        llm: agent.llm,
-      };
-    }),
-    current_agent: LLMAgentCore.DefaultPayload,
+    get agents() {
+      return _internal.agents.map((agent) => {
+        return {
+          id: agent.id,
+          name: agent.name,
+          desc: agent.desc,
+          prompt: agent.prompt,
+          llm: agent.llm,
+        };
+      });
+    },
+    get current_agent() {
+      return LLMAgentCore.DefaultPayload;
+    },
   };
   enum Events {
     AgentChange,
@@ -584,15 +597,17 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
   };
   const bus = base<TheTypesOfEvents>();
 
-  return {
+  const _store = {
     symbol: "AgentStore" as const,
     state: _state,
-    $editor: _editor,
     get agents() {
-      return _agents;
+      return _internal.agents;
     },
-    findAgentById(id: string) {
-      return _agents.find((agent) => agent.id === id) ?? null;
+    findAgentById(id: string | number): Promise<Result<LLMAgentCore>> {
+      return Promise.resolve(Result.Err("请实现 findAgentById"));
+    },
+    buildFromOuter(data: any): Result<LLMAgentCore> {
+      return Result.Err("请实现 buildFromOuter");
     },
     patch(
       agents: Record<
@@ -607,8 +622,8 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
         }
       >
     ) {
-      for (let i = 0; i < _agents.length; i += 1) {
-        const agent = _agents[i];
+      for (let i = 0; i < _internal.agents.length; i += 1) {
+        const agent = _internal.agents[i];
         const config = agents[agent.id];
         if (config) {
           agent.update({
@@ -618,20 +633,21 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
         }
       }
     },
-    selectAgent(payload: { id: string }) {
-      const agent = _agents.find((a) => a.id === payload.id);
-      if (!agent) {
-        return;
-      }
-      this.$editor.selectAgent(agent);
+    setAgents(agents: LLMAgentCore[]) {
+      attachLLMServiceAndOther(agents);
+      _internal.agents = [...agents];
+      bus.emit(Events.StateChange, { ..._state });
     },
-    onAgentChange(handler: Handler<TheTypesOfEvents[Events.AgentChange]>) {
-      return bus.on(Events.AgentChange, handler);
+    appendAgents(agents: LLMAgentCore[]) {
+      attachLLMServiceAndOther(agents);
+      _internal.agents = [..._internal.agents, ...agents];
+      bus.emit(Events.StateChange, { ..._state });
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
   };
+  return _store;
 }
 
 export type LLMAgentStore = ReturnType<typeof LLMAgentStore>;

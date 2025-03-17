@@ -81,6 +81,15 @@ function HomeIndexViewModel(props: ViewComponentProps) {
     bus.emit(Events.StateChange, { ..._state });
   });
 
+  // 添加一个工具函数来处理换行
+  function convertToPlainText(html: string) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    // 将 <div> 和 <br> 转换为换行符
+    const content = div.innerText.replace(/\n\n/g, '\n');
+    return content;
+  }
+
   return {
     state: _state,
     ui: {
@@ -99,7 +108,8 @@ function HomeIndexViewModel(props: ViewComponentProps) {
       if (!_currentNote) {
         return;
       }
-      _currentNote.setContent(content);
+      const plainText = convertToPlainText(content);
+      _currentNote.setContent(plainText);
       bus.emit(Events.StateChange, { ..._state });
     },
     // 更新笔记
@@ -110,10 +120,11 @@ function HomeIndexViewModel(props: ViewComponentProps) {
         });
         return;
       }
-      if (!_currentNote.contentHasChanged(content)) {
+      const plainText = convertToPlainText(content);
+      if (!_currentNote.contentHasChanged(plainText)) {
         return;
       }
-      const r = await _currentNote.updateContent(content);
+      const r = await _currentNote.updateContent(plainText);
       if (r.error) {
         props.app.tip({
           text: [r.error.message],
@@ -412,16 +423,15 @@ export const HomeIndexPage: ViewComponent = (props) => {
             </div>
           </div>
           <div class="flex-1 overflow-y-auto">
-            <div
-              class="min-h-[calc(100vh-120px)] px-6 pb-12 outline-none leading-relaxed text-gray-700"
+            <pre
+              class="min-h-[calc(100vh-120px)] px-6 pb-12 outline-none leading-relaxed text-gray-700 whitespace-pre-wrap break-words"
               contentEditable
               onMouseUp={() => $model.handleTextSelection()}
-              // onKeyUp={() => $model.handleTextSelection()}
-              onChange={(event) => $model.syncContent(event.currentTarget.innerText)}
-              onBlur={(event) => $model.updateNoteContent(event.currentTarget.innerText)}
+              onChange={(event) => $model.syncContent(event.currentTarget.innerHTML)}
+              onBlur={(event) => $model.updateNoteContent(event.currentTarget.innerHTML)}
             >
               {state().editContent}
-            </div>
+            </pre>
           </div>
         </Show>
       </div>

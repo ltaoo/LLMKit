@@ -11,6 +11,7 @@ type TheTypesOfEvents = {
 };
 type CheckboxProps = {
   label?: string;
+  defaultValue?: boolean;
   checked?: boolean;
   value?: boolean;
   disabled?: boolean;
@@ -47,13 +48,19 @@ export class CheckboxCore extends BaseDomain<TheTypesOfEvents> {
   constructor(props: { _name?: string } & CheckboxProps = {}) {
     super(props);
 
-    const { label = "", disabled = false, checked = false, onChange } = props;
+    const {
+      label = "",
+      disabled = false,
+      defaultValue = false,
+      checked = false,
+      onChange,
+    } = props;
     this.label = label;
     this.disabled = disabled;
     this.checked = checked;
-    this.defaultChecked = checked;
+    this.defaultChecked = defaultValue;
     this.value = checked;
-    this.defaultValue = checked;
+    this.defaultValue = defaultValue;
 
     this.presence = new PresenceCore();
     if (onChange) {

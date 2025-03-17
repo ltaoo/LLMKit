@@ -4,9 +4,11 @@ import { ChatBoxPayload, ChatBoxPayloadType } from "@llm/libs/chatbox";
 import { LLMServiceInWeb } from "@llm/libs/llm_service.web";
 import { build_request } from "@llm/libs/request_builder";
 
+import { find_llm_agent_by_id } from "@/biz/services";
+import { RequestCore } from "@/domains/request";
+
 import { llm_store } from "./llm";
 import { client } from "./request";
-import { storage } from "./storage";
 
 /********************** LLM Service *****************/
 const request = build_request({
@@ -33,37 +35,54 @@ export enum ChatBoxPayloadCustomType {
   Vocabulary = "vocabulary",
 }
 export const agent_store = LLMAgentStore({
-  agents: [
-    LLMAgentCore({
-      id: "1",
-      name: "纠错",
-      desc: "可以对中文进行纠错",
-      prompt: "你是一个中文纠错专家，请对以下中文进行纠错，并给出纠错后的结果。",
-    }),
-    LLMAgentCore({
-      id: "2",
-      name: "润色",
-      desc: "可以对中文进行润色",
-      prompt: "你是一个中文润色专家，请对以下中文进行润色，并给出润色后的结果。请不要考虑语句是否合理，只需要润色即可。",
-      memorize: false,
-    }),
-    LLMAgentCore({
-      id: "3",
-      name: "翻译成英文",
-      desc: "可以对中文进行翻译成英文",
-      prompt: "你是一个中文翻译成英文专家，请对以下中文进行翻译成英文，并给出翻译后的结果。",
-    }),
-    LLMAgentCore({
-      id: "4",
-      name: "查询",
-      desc: "可以对中文进行查询",
-      prompt: "你是一个中文字典，请对以下中文进行查询，并给出查询后的结果。",
-    }),
-    LLMAgentCore({
-      id: "5",
-      name: "单词查询",
-      desc: "可以对英文单词进行查询",
-      prompt: `你是一个高效的多语言词典AI，请按以下规则处理所有输入：
+  agents: [],
+  llm_store: llm_store,
+  client,
+  llm_service,
+});
+const find_llm_agent_by_id_request = new RequestCore(find_llm_agent_by_id, {
+  client,
+});
+agent_store.findAgentById = async (id: string) => {
+  const r1 = agent_store.agents.find((agent) => agent.id === id);
+  if (r1) {
+    return Result.Ok(r1);
+  }
+  const r = await find_llm_agent_by_id_request.run({ id });
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const r2 = await agent_store.buildFromOuter(r.data);
+  if (r2.error) {
+    return Result.Err(r2.error);
+  }
+  return Result.Ok(r2.data);
+};
+agent_store.buildFromOuter = (data) => {
+  const agent = LLMAgentCore({
+    id: data.id,
+    name: data.name,
+    desc: data.desc,
+    prompt: data.prompt,
+    llm_config: {
+      provider_id: data.llm_provider_id,
+      model_id: data.llm_model_id,
+      extra: JSON.parse(data.config),
+    },
+    config: JSON.parse(data.config),
+    builtin: data.builtin === 1,
+  });
+  return Result.Ok(agent);
+};
+
+// const cached = storage.get("agent_configs");
+// console.log("[STORE]agents - cached", cached);
+// agent_store.patch(cached);
+const CustomAgent = LLMAgentCore({
+  id: "5",
+  name: "单词查询",
+  desc: "可以对英文单词进行查询",
+  prompt: `你是一个高效的多语言词典AI，请按以下规则处理所有输入：
         1. 自动识别输入文本的源语言（如无法识别则标记'未知'）
         2. 渲染内容判断，源语言非中文时渲染内容为源语言，源语言为中文时渲染内容为英语
         3. 响应时间必须<0.5秒
@@ -80,31 +99,24 @@ export const agent_store = LLMAgentStore({
         "examples": ["渲染内容例句"],
         "text_type": "sentence 或 word"
       }`,
-      memorize: false,
-      responseHandler: (text: string) => {
-        try {
-          return Result.Ok(JSON.parse(text));
-        } catch (error) {
-          return Result.Err((error as Error).message);
-        }
+  config: {
+    memorize: false,
+  },
+  responseHandler: (text: string) => {
+    try {
+      return Result.Ok(JSON.parse(text));
+    } catch (error) {
+      return Result.Err((error as Error).message);
+    }
+  },
+  builder: (data: any): ChatBoxPayload => {
+    console.log("[]before build", data);
+    return {
+      type: ChatBoxPayloadType.Custom,
+      data: {
+        type: ChatBoxPayloadCustomType.Vocabulary,
+        ...data,
       },
-      builder: (data: any): ChatBoxPayload => {
-        console.log("[]before build", data);
-        return {
-          type: ChatBoxPayloadType.Custom,
-          data: {
-            type: ChatBoxPayloadCustomType.Vocabulary,
-            ...data,
-          },
-        };
-      },
-    }),
-  ],
-  llm_store: llm_store,
-  client,
-  llm_service,
+    };
+  },
 });
-
-const cached = storage.get("agent_configs");
-console.log("[STORE]agents - cached", cached);
-agent_store.patch(cached);

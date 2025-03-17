@@ -31,6 +31,9 @@ function Application() {
     });
   });
   onMount(() => {
+    localStorage.setItem("theme", "light");
+    document.documentElement.setAttribute("data-theme", "light");
+    document.documentElement.style.colorScheme = "light";
     const { innerWidth, innerHeight, location } = window;
     history.$router.prepare(location);
     app.start({
@@ -54,11 +57,7 @@ function Application() {
             const routeName = subView.name;
             const PageContent = pages[routeName as Exclude<PageKeys, "root">];
             return (
-              <KeepAliveRouteView
-                class="absolute inset-0 opacity-100 dark:bg-black"
-                store={subView}
-                index={i()}
-              >
+              <KeepAliveRouteView class="absolute inset-0 opacity-100 dark:bg-black" store={subView} index={i()}>
                 <PageContent
                   app={app}
                   history={history}

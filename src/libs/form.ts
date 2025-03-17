@@ -164,6 +164,9 @@ export class ArrayFieldCore<
     }
     //     bus.emit(Events.StateChange, _state);
   }
+  get fields(): (SingleFieldCore<any> | ArrayFieldCore<any> | ObjectFieldCore<any>)[] {
+    return this._fields;
+  }
   async validate(): Promise<Result<ArrayFieldValue<T>>> {
     const results: ArrayFieldValue<T> = [];
     for (let i = 0; i < this._fields.length; i += 1) {
@@ -275,6 +278,9 @@ export class ObjectFieldCore<
       const field = this._fields[key];
       field.setValue(values[key]);
     }
+  }
+  get fields(): Record<string, SingleFieldCore<any> | ArrayFieldCore<any> | ObjectFieldCore<any>> {
+    return this._fields;
   }
   async validate(): Promise<Result<ObjectValue<T>>> {
     const results: ObjectValue<T> = {} as ObjectValue<T>;

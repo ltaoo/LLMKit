@@ -3,6 +3,7 @@
  * 应该在这里进行一些初始化操作、全局状态或变量的声明
  */
 import { request } from "@/biz/requests";
+import { fetch_llm_agents, fetch_llm_providers } from "@/biz/services";
 import { UserCore } from "@/biz/user/index";
 import { ListCore } from "@/domains/list/index";
 import { ImageCore } from "@/domains/ui/index";
@@ -15,7 +16,7 @@ import { HistoryCore } from "@/domains/history/index";
 import { connect as connectApplication } from "@/domains/app/connect.web";
 import { connect as connectHistory } from "@/domains/history/connect.web";
 import { onCreateScrollView } from "@/domains/ui/scroll-view";
-import { onRequestCreated } from "@/domains/request/index";
+import { onRequestCreated, RequestCore } from "@/domains/request/index";
 import { Result } from "@/domains/result/index";
 
 import { PageKeys, routes, routesWithPathname } from "./routes";
@@ -72,6 +73,12 @@ export const history = new HistoryCore<PageKeys, RouteConfig<PageKeys>>({
     root: view,
   } as Record<PageKeys, RouteViewCore>,
 });
+const _service = {
+  llm: {
+    provider: new RequestCore(fetch_llm_providers, { client }),
+    agent: new ListCore(new RequestCore(fetch_llm_agents, { client })),
+  },
+};
 export const app = new Application({
   user,
   storage,
@@ -83,23 +90,13 @@ export const app = new Application({
       history.push("root.notfound");
       return Result.Ok(null);
     }
-    if (!route.options?.require?.includes("login")) {
-      if (!history.isLayout(route.name)) {
-        history.push(route.name, query, { ignore: true });
-        return Result.Ok(null);
-      }
-      history.push("root.home_layout.index");
-      return Result.Ok(null);
-    }
     console.log("[STORE]index - before if (!app.$user.isLogin", app.$user.isLogin);
-    // if (!app.$user.isLogin) {
-    //   app.tip({
-    //     text: ["请先登录"],
-    //   });
-    //   history.push("root.login", { redirect: route.pathname });
-    //   return Result.Err("need login");
-    // }
     console.log("before client.appendHeaders", app.$user.token);
+    const r = await _service.llm.provider.run();
+    if (r.error) {
+      return Result.Err(r.error.message);
+    }
+    llm_store.setProvidersFromJSON(r.data.list);
     if (!history.isLayout(route.name)) {
       history.push(route.name, query, { ignore: true });
       return Result.Ok(null);

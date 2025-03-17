@@ -2,6 +2,7 @@ import { base, Handler } from "./base";
 import { Result } from "./result";
 import { BizError } from "./biz_error";
 import { ObjectFieldCore } from "./form";
+import { fromJSON } from "./form_json";
 
 /**
  * @file 管理 LLM 厂商及配置信息
@@ -10,14 +11,14 @@ type LLMProviderModelValueProps = {
   id: string;
   name: string;
   enabled: boolean;
-  buildin: boolean;
+  builtin: boolean;
 };
 /** LLM 厂商模型值 */
 export function LLMProviderModelValue(props: LLMProviderModelValueProps) {
   let _id = props.id;
   let _name = props.name;
   let _enabled = props.enabled;
-  let _buildin = props.buildin;
+  let _builtin = props.builtin;
 
   return {
     get id() {
@@ -29,8 +30,8 @@ export function LLMProviderModelValue(props: LLMProviderModelValueProps) {
     get enabled() {
       return _enabled;
     },
-    get buildin() {
-      return _buildin;
+    get builtin() {
+      return _builtin;
     },
     toggle(value: boolean) {
       _enabled = value;
@@ -42,7 +43,7 @@ export function LLMProviderModelValue(props: LLMProviderModelValueProps) {
       return {
         id: _id,
         enabled: _enabled,
-        buildin: _buildin,
+        buildin: _builtin,
       };
     },
   };
@@ -106,8 +107,8 @@ export function LLMProviderValue(props: LLMProviderValueProps) {
       return {
         id: _id,
         enabled: _enabled,
-        apiProxyAddress: _apiProxyAddress,
-        apiKey: _apiKey,
+        api_proxy_address: _apiProxyAddress,
+        api_key: _apiKey,
         models: _models.map((m) => m.toJSON()),
       };
     },
@@ -150,8 +151,8 @@ type LLMProviderCoreProps = {
   id: string;
   name: string;
   logo_uri: string;
-  apiProxyAddress: string;
-  apiKey: string;
+  api_address: string;
+  // apiKey: string;
   models: LLMProviderModelCore[];
   // 支持的配置项
   configure: ObjectFieldCore<any>;
@@ -160,8 +161,8 @@ export function LLMProviderCore(props: LLMProviderCoreProps) {
   let _id = props.id;
   let _name = props.name;
   let _logo_uri = props.logo_uri;
-  let _apiProxyAddress = props.apiProxyAddress;
-  let _apiKey = props.apiKey;
+  let _api_address = props.api_address;
+  // let _apiKey = props.apiKey;
   let _models = props.models;
   let _configure = props.configure;
 
@@ -177,11 +178,11 @@ export function LLMProviderCore(props: LLMProviderCoreProps) {
       return _logo_uri;
     },
     get apiProxyAddress() {
-      return _apiProxyAddress;
+      return _api_address;
     },
-    get apiKey() {
-      return _apiKey;
-    },
+    // get apiKey() {
+    //   return _apiKey;
+    // },
     get models() {
       return _models;
     },
@@ -262,7 +263,7 @@ type LLMProviderStoreProps = {
   providers: LLMProviderCore[];
 };
 export function LLMProviderStore(props: LLMProviderStoreProps) {
-  const _providers = props.providers;
+  let _providers = props.providers;
   let _values: Record<string, LLMProviderValue> = {};
   let _pendingProviders: Record<
     string,
@@ -288,7 +289,7 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
                   id: m.id,
                   name: m.name,
                   enabled: isDefaultEnabled(p.id),
-                  buildin: true,
+                  builtin: true,
                 });
               }),
             ],
@@ -318,7 +319,7 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
             id: m.id,
             name: m.name,
             enabled: m.enabled,
-            buildin: m.buildin,
+            buildin: m.builtin,
           })),
         };
       });
@@ -364,6 +365,9 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
   enum Events {
     StateChange,
     ProviderChange,
+    ProviderModelCreated,
+    ProviderModelDeleted,
+    ProviderModelUpdated,
     Error,
   }
   type TheTypesOfEvents = {
@@ -378,6 +382,19 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
         enabled: boolean;
       }[];
     };
+    [Events.ProviderModelCreated]: {
+      provider_id: string;
+      model_id: string;
+    };
+    [Events.ProviderModelDeleted]: {
+      provider_id: string;
+      model_id: string;
+    };
+    [Events.ProviderModelUpdated]: {
+      provider_id: string;
+      model_id: string;
+      enabled: boolean;
+    };
     [Events.Error]: BizError;
   };
   const bus = base<TheTypesOfEvents>();
@@ -386,6 +403,49 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
     state: _state,
     get providers() {
       return _providers;
+    },
+    setProvidersFromJSON(data: LLMProviderJSON[]) {
+      const values: Record<string, LLMProviderValue> = {};
+      const providers: LLMProviderCore[] = [];
+      data.forEach((p) => {
+        values[p.id] = LLMProviderValue({
+          id: p.id,
+          enabled: p.enabled === 1,
+          apiProxyAddress: p.api_proxy_address || "",
+          apiKey: p.api_key || "",
+          models: p.models.map((m) => {
+            return LLMProviderModelValue({
+              id: m.id,
+              name: m.name,
+              enabled: m.enabled === 1,
+              builtin: m.builtin === 1,
+            });
+          }),
+        });
+        providers.push(
+          LLMProviderCore({
+            id: p.id,
+            name: p.name,
+            logo_uri: p.logo_uri,
+            api_address: p.api_address || "",
+            models: p.models.map((m) => {
+              return LLMProviderModelCore({
+                id: m.id,
+                name: m.name,
+                desc: "",
+                tags: [],
+              });
+            }),
+            configure: fromJSON(
+              JSON.parse(p.configure)
+            ) as ObjectFieldCore<any>,
+          })
+        );
+      });
+      _providers = providers;
+      _values = values;
+      console.log("[LLM]setProvidersFromJSON", _values);
+      this.patch(values);
     },
     get firstEnabledProvider() {
       const r = _providers.find((p) => {
@@ -420,7 +480,7 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
           enabled: boolean;
           apiProxyAddress?: string;
           apiKey?: string;
-          models: { id: string; enabled: boolean; buildin: boolean }[];
+          models: { id: string; enabled: boolean; builtin: boolean }[];
         }
       >
     ) {
@@ -455,7 +515,7 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
               id: m.id,
               name: modelMapWithName[m.id] || m.id,
               enabled: m.enabled,
-              buildin: m.buildin,
+              builtin: m.builtin,
             });
           })
         );
@@ -511,6 +571,11 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
       }
       model.toggle(payload.enabled);
       bus.emit(Events.ProviderChange, value.toJSON());
+      bus.emit(Events.ProviderModelUpdated, {
+        provider_id: payload.provider_id,
+        model_id: payload.model_id,
+        enabled: payload.enabled,
+      });
       bus.emit(Events.StateChange, { ..._state });
     },
     updatePendingModel(payload: { provider_id: string; id: string }) {
@@ -523,6 +588,10 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
       console.log("[BIZ]llm_provider - addPendingModel", payload);
       const value = _values[payload.provider_id];
       if (!value) {
+        bus.emit(
+          Events.Error,
+          new BizError(`找不到对应的 LLM 表单值: ${payload.provider_id}`)
+        );
         return;
       }
       const model_id =
@@ -532,12 +601,15 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
           id: model_id,
           name: model_id,
           enabled: true,
-          buildin: false,
+          builtin: false,
         })
       );
       _pendingProviders = {};
-      // _pendingModel = { id: "" };
       bus.emit(Events.ProviderChange, value.toJSON());
+      bus.emit(Events.ProviderModelCreated, {
+        provider_id: payload.provider_id,
+        model_id: model_id,
+      });
       bus.emit(Events.StateChange, { ..._state });
     },
     deleteProviderModel(payload: { provider_id: string; model_id: string }) {
@@ -547,6 +619,10 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
       }
       value.setModels(value.models.filter((m) => m.id !== payload.model_id));
       bus.emit(Events.ProviderChange, value.toJSON());
+      bus.emit(Events.ProviderModelDeleted, {
+        provider_id: payload.provider_id,
+        model_id: payload.model_id,
+      });
       bus.emit(Events.StateChange, { ..._state });
     },
     /** 根据 provider_id 和 model_id 构建 LLM 服务所需的 payload */
@@ -580,6 +656,21 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
     ) {
       return bus.on(Events.ProviderChange, handler);
     },
+    onProviderModelCreated(
+      handler: Handler<TheTypesOfEvents[Events.ProviderModelCreated]>
+    ) {
+      return bus.on(Events.ProviderModelCreated, handler);
+    },
+    onProviderModelDeleted(
+      handler: Handler<TheTypesOfEvents[Events.ProviderModelDeleted]>
+    ) {
+      return bus.on(Events.ProviderModelDeleted, handler);
+    },
+    onProviderModelUpdated(
+      handler: Handler<TheTypesOfEvents[Events.ProviderModelUpdated]>
+    ) {
+      return bus.on(Events.ProviderModelUpdated, handler);
+    },
     onError(handler: Handler<TheTypesOfEvents[Events.Error]>) {
       return bus.on(Events.Error, handler);
     },
@@ -589,3 +680,15 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
   };
 }
 export type LLMProviderStore = ReturnType<typeof LLMProviderStore>;
+
+export type LLMProviderJSON = {
+  id: string;
+  name: string;
+  logo_uri: string;
+  api_address: string;
+  configure: string;
+  api_proxy_address: string | null;
+  api_key: string | null;
+  enabled: number;
+  models: { id: string; name: string; builtin: number; enabled: number }[];
+};

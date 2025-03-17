@@ -1,4 +1,5 @@
 import { base, Handler } from "./base";
+import { Result } from "./result";
 import { LLMAgentCore } from "./llm_agent";
 import { ChatBox, ChatBoxPayloadType } from "./chatbox";
 
@@ -109,7 +110,7 @@ export function ChatRoomCore(props: ChatRoomCoreProps) {
       );
       for (let i = 0; i < _agents.length; i += 1) {
         const agent = _agents[i];
-        agent.request(t).then((r) => {
+        agent.request(t).then((r: Result<any>) => {
           if (r.error) {
             _boxes.push(
               ChatBox({
@@ -134,13 +135,15 @@ export function ChatRoomCore(props: ChatRoomCoreProps) {
                 name: agent.name,
                 isMe: false,
               },
-              payload:
-                r.data.type === undefined
-                  ? {
-                      type: ChatBoxPayloadType.Text,
-                      text: r.data,
-                    }
-                  : r.data,
+              payload: (() => {
+                if (r.data.type === undefined) {
+                  return {
+                    type: ChatBoxPayloadType.Text,
+                    text: r.data,
+                  };
+                }
+                return r.data;
+              })(),
               created_at: new Date().valueOf(),
             })
           );

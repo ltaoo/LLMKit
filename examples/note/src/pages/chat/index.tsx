@@ -1,25 +1,28 @@
+import { For, Show } from "solid-js";
+
 import { base, Handler } from "@llm/libs/base";
 import { ChatRoomCore } from "@llm/libs/chatroom";
 import { ChatBoxPayloadType } from "@llm/libs/chatbox";
+import { BizError } from "@llm/libs/biz_error";
+import { LLMAgentCore } from "@llm/libs/llm_agent";
 
 import { ViewComponentProps } from "@/store/types";
 import { ChatBoxPayloadCustomType } from "@/store/agents";
 import { agent_store } from "@/store/agents";
 import { llm_store } from "@/store/llm";
 import { useViewModel } from "@/hooks";
-import { For, Show } from "solid-js";
-import { BizError } from "@llm/libs/biz_error";
 
 function AgentChatViewModel(props: ViewComponentProps) {
   console.log("[PAGE]chat/index - AgentChatViewModel", props.view.query);
 
-  let _agent = agent_store.findAgentById(props.view.query.id);
-  let _chatroom = ChatRoomCore({ agents: _agent ? [_agent] : [] });
+  let _agent: LLMAgentCore | null = null;
+  let _error: BizError | null = null;
+  let _chatroom = ChatRoomCore({ agents: [] });
 
   let _state = {
     get name() {
       if (!_agent) {
-        return "unknown";
+        return "...";
       }
       return _agent.name;
     },
@@ -61,18 +64,22 @@ function AgentChatViewModel(props: ViewComponentProps) {
       return _chatroom.state.inputting;
     },
     get error() {
-      if (!_agent) {
-        return new BizError("没有找到匹配的 agent");
-      }
-      return null;
+      return _error
+        ? {
+            message: _error.message,
+            code: _error.code,
+          }
+        : null;
     },
   };
 
   enum Events {
     StateChange,
+    Error,
   }
   type TheTypesOfEvents = {
     [Events.StateChange]: typeof _state;
+    [Events.Error]: typeof _error;
   };
   const bus = base<TheTypesOfEvents>();
   return {
@@ -80,13 +87,28 @@ function AgentChatViewModel(props: ViewComponentProps) {
     ui: {
       $chatroom: _chatroom,
     },
-    ready() {
+    async ready() {
       agent_store.onStateChange(() => {
         bus.emit(Events.StateChange, { ..._state });
       });
       _chatroom.onStateChange(() => {
         bus.emit(Events.StateChange, { ..._state });
       });
+      const r = await agent_store.findAgentById(props.view.query.id);
+      if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
+        _error = r.error;
+        bus.emit(Events.StateChange, { ..._state });
+        return;
+      }
+      console.log("[PAGE]chat/index - AgentChatViewModel - r", r.data);
+      _agent = r.data;
+      agent_store.appendAgents([_agent]);
+      _error = null;
+      _chatroom.addAgentToChat(_agent);
+      bus.emit(Events.StateChange, { ..._state });
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -132,7 +154,6 @@ export function AgentChatPage(props: ViewComponentProps) {
                   </div>
                   <div class={`max-w-[70%] ${msg.isMe ? "items-end" : "items-start"}`}>
                     <div class={`text-sm text-gray-600 mb-1 ${msg.isMe ? "text-right" : ""}`}>{msg.sender.name}</div>
-                    {msg.payload.type}
                     {(() => {
                       if (msg.payload.type === ChatBoxPayloadType.Text) {
                         return (

@@ -2,14 +2,14 @@ import { LLMProviderCore, LLMProviderModelCore } from "./libs/llm_provider";
 import { ObjectFieldCore, SingleFieldCore } from "./libs/form";
 import { InputCore } from "./libs/input";
 import { CheckboxCore } from "./libs/checkbox";
+import { toJSON, fromJSON, FormFieldJSON } from "./libs/form_json";
 
 export const LLMProviders = [
   LLMProviderCore({
     id: "deepseek",
     name: "DeepSeek",
     logo_uri: "/provider_dark_deepseek.png",
-    apiProxyAddress: "https://api.deepseek.com",
-    apiKey: "",
+    api_address: "https://api.deepseek.com/chat/completions",
     models: [
       LLMProviderModelCore({
         id: "deepseek-chat",
@@ -26,7 +26,7 @@ export const LLMProviders = [
           label: "流式输出",
           name: "stream",
           input: new CheckboxCore({
-            value: false,
+            defaultValue: false,
           }),
         }),
         temperature: new SingleFieldCore({
@@ -43,8 +43,7 @@ export const LLMProviders = [
     id: "openai",
     name: "OpenAI",
     logo_uri: "/provider_light_openai.png",
-    apiProxyAddress: "https://api.openai.com",
-    apiKey: "",
+    api_address: "https://api.openai.com/v1/chat/completions",
     models: [
       LLMProviderModelCore({
         id: "openai-gpt-4o-mini",
@@ -67,7 +66,7 @@ export const LLMProviders = [
           label: "流式输出",
           name: "stream",
           input: new CheckboxCore({
-            value: false,
+            defaultValue: false,
           }),
         }),
       },
@@ -77,8 +76,7 @@ export const LLMProviders = [
     id: "volcengine",
     name: "火山引擎",
     logo_uri: "/provider_light_doubao.png",
-    apiKey: "",
-    apiProxyAddress:
+    api_address:
       "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
     models: [
       LLMProviderModelCore({
@@ -108,7 +106,7 @@ export const LLMProviders = [
           label: "流式输出",
           name: "stream",
           input: new CheckboxCore({
-            value: false,
+            defaultValue: false,
           }),
         }),
       },
@@ -118,8 +116,7 @@ export const LLMProviders = [
     id: "siliconflow",
     name: "硅基流动",
     logo_uri: "/provider_light_siliconcloud.png",
-    apiKey: "",
-    apiProxyAddress: "https://api.siliconflow.cn/v1/chat/completions",
+    api_address: "https://api.siliconflow.cn/v1/chat/completions",
     models: [
       LLMProviderModelCore({
         id: "Pro/deepseek-ai/DeepSeek-R1",
@@ -154,10 +151,25 @@ export const LLMProviders = [
           label: "流式输出",
           name: "stream",
           input: new CheckboxCore({
-            value: false,
+            defaultValue: false,
           }),
         }),
       },
     }),
   }),
 ];
+
+export interface LLMProviderJSON {
+  id: string;
+  name: string;
+  logo_uri: string;
+  apiProxyAddress: string;
+  apiKey: string;
+  models: Array<{
+    id: string;
+    name: string;
+    desc: string;
+    tags: string[];
+  }>;
+  configure: FormFieldJSON;
+}

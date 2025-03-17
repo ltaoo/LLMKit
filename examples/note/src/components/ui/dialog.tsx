@@ -33,15 +33,20 @@ export function Dialog(
         <DialogPrimitive.Content
           class={cn(
             "fixed z-50 grid gap-4 rounded-b-lg bg-white p-6 duration-200",
-            "sm:zoom-in-90 sm:rounded-lg",
-            "dark:bg-slate-900"
+            "sm:zoom-in-90 sm:rounded-lg"
+            // "dark:bg-slate-900"
           )}
           enterClassName="animate-in fade-in-90"
           exitClassName="animate-out fade-out"
           store={store}
         >
           <DialogPrimitive.Header class="flex flex-col space-y-2 text-center sm:text-left">
-            <DialogPrimitive.Title class={cn("text-lg font-semibold text-slate-900", "dark:text-slate-50")}>
+            <DialogPrimitive.Title
+              class={cn(
+                "text-lg font-semibold text-slate-900"
+                // "dark:text-slate-50"
+              )}
+            >
               {state().title}
             </DialogPrimitive.Title>
           </DialogPrimitive.Header>
@@ -51,8 +56,9 @@ export function Dialog(
               class={cn(
                 "absolute top-4 right-4 cursor-pointer rounded-sm",
                 "opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:pointer-events-none",
-                "dark:focus:ring-slate-400 dark:focus:ring-offset-slate-900",
-                "data-[state=open]:bg-slate-100 dark:data-[state=open]:bg-slate-800"
+                "data-[state=open]:bg-slate-100"
+                // "dark:focus:ring-slate-400 dark:focus:ring-offset-slate-900",
+                // "dark:data-[state=open]:bg-slate-800"
               )}
               store={store}
             >

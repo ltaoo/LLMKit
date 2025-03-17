@@ -105,7 +105,7 @@ type TheTypesOfEvents<T> = {
   [Events.BeforeSearch]: void;
   [Events.AfterSearch]: { params: Search };
   [Events.ParamsChange]: FetchParams;
-  [Events.DataSourceAdded]: unknown[];
+  [Events.DataSourceAdded]: T[];
   [Events.DataSourceChange]: T[];
   [Events.StateChange]: ListState<T>;
   [Events.Error]: Error;
