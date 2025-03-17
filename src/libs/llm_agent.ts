@@ -12,7 +12,7 @@ enum LLMAgentType {
 }
 
 type LLMAgentCoreProps = {
-  id: string;
+  id: number;
   name: string;
   desc?: string;
   prompt: string;
@@ -150,6 +150,7 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
         bus.emit(Events.Error, r.error);
         return r;
       }
+      console.log("[LLMSDK]llm_agent - selectLLMModel", r.data);
       _llm_payload.provider_id = r.data.provider_id;
       _llm_payload.model_id = r.data.model_id;
       if (_llm_service) {
@@ -284,7 +285,7 @@ type LLMAgentEditorCoreProps = {
   agent: LLMAgentStore;
 };
 export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
-  let _id = "";
+  let _id = 0;
   let _name = "";
   let _desc = "";
   let _prompt = "";
@@ -358,7 +359,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
   }
   type TheTypesOfEvents = {
     [Events.Change]: {
-      id: string;
+      id: number;
       llm: {
         provider_id: string | null;
         model_id: string | null;
@@ -412,15 +413,15 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
       _agent_store = agent_store;
     },
     get isCreateAgent() {
-      return _agent?.id === "";
+      return _agent?.id === 0;
     },
     startCreateAgent() {
-      _id = "";
+      _id = 0;
       _name = "";
       _desc = "";
       _prompt = "";
       _agent = LLMAgentCore({
-        id: "",
+        id: 0,
         name: "",
         desc: "",
         prompt: "",
@@ -547,6 +548,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
         }
       }
       _agent.selectLLMModel(payload);
+      console.log("[LLMSDK]llm_agent - selectProviderModel - _agent.selectLLMModel", options.silent);
       if (!options.silent) {
         bus.emit(Events.Change, this.toJSON());
         bus.emit(Events.StateChange, { ..._state });
@@ -554,7 +556,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
     },
     async selectProviderModelForAgent(
       payload: {
-        agent_id: string;
+        agent_id: number;
         provider_id: string;
         model_id: string;
       },
@@ -646,7 +648,7 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
   }
   type TheTypesOfEvents = {
     [Events.AgentChange]: {
-      id: string;
+      id: number;
       llm: {
         provider_id: string | null;
         model_id: string | null;
@@ -663,7 +665,7 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
     get agents() {
       return _internal.agents;
     },
-    findAgentById(id: string | number): Promise<Result<LLMAgentCore>> {
+    findAgentById(id: number): Promise<Result<LLMAgentCore>> {
       return Promise.resolve(Result.Err("请实现 findAgentById"));
     },
     findAgentByName(name: string): Promise<Result<LLMAgentCore>> {
@@ -676,7 +678,7 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
       agents: Record<
         string,
         {
-          id: string;
+          id: number;
           llm: {
             provider_id: string;
             model_id: string;

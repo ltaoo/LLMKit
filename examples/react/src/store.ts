@@ -16,15 +16,15 @@ const DEFAULT_CACHE_VALUES = {
     {
       id: string;
       enabled: boolean;
-      apiProxyAddress?: string;
-      apiKey?: string;
-      models: { id: string; enabled: boolean; buildin: boolean }[];
+      api_proxy_address?: string;
+      api_key?: string;
+      models: { id: string; enabled: boolean; builtin: boolean }[];
     }
   >,
   agent_configs: {} as Record<
     string,
     {
-      id: string;
+      id: number;
       llm: {
         provider_id: string;
         model_id: string;
@@ -90,34 +90,34 @@ export enum ChatBoxPayloadCustomType {
 export const agent_store = LLMAgentStore({
   agents: [
     LLMAgentCore({
-      id: "1",
+      id: 1,
       name: "纠错",
       desc: "可以对中文进行纠错",
       prompt:
         "你是一个中文纠错专家，请对以下中文进行纠错，并给出纠错后的结果。",
     }),
     LLMAgentCore({
-      id: "2",
+      id: 2,
       name: "润色",
       desc: "可以对中文进行润色",
       prompt:
         "你是一个中文润色专家，请对以下中文进行润色，并给出润色后的结果。",
     }),
     LLMAgentCore({
-      id: "3",
+      id: 3,
       name: "翻译成英文",
       desc: "可以对中文进行翻译成英文",
       prompt:
         "你是一个中文翻译成英文专家，请对以下中文进行翻译成英文，并给出翻译后的结果。",
     }),
     LLMAgentCore({
-      id: "4",
+      id: 4,
       name: "查询",
       desc: "可以对中文进行查询",
       prompt: "你是一个中文字典，请对以下中文进行查询，并给出查询后的结果。",
     }),
     LLMAgentCore({
-      id: "5",
+      id: 5,
       name: "单词查询",
       desc: "可以对英文单词进行查询",
       prompt: `你是一个高效的多语言词典AI，请按以下规则处理所有输入：
@@ -156,9 +156,23 @@ export const agent_store = LLMAgentStore({
       },
     }),
   ],
-  llm_store: llm_store,
+  llm_store,
   client,
   llm_service,
 });
+agent_store.findAgentById = (id: number) => {
+  const r = agent_store.agents.find((agent) => agent.id === id);
+  if (!r) {
+    return Promise.resolve(Result.Err("Agent not found"));
+  }
+  return Promise.resolve(Result.Ok(r));
+};
+agent_store.findAgentByName = (name: string) => {
+  const r = agent_store.agents.find((agent) => agent.name === name);
+  if (!r) {
+    return Promise.resolve(Result.Err("Agent not found"));
+  }
+  return Promise.resolve(Result.Ok(r));
+};
 
-export const chatroom = ChatRoomCore();
+export const chatroom = ChatRoomCore({});

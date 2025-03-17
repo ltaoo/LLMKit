@@ -98,7 +98,7 @@ function AgentChatViewModel(props: ViewComponentProps) {
       _chatroom.onStateChange(() => {
         bus.emit(Events.StateChange, { ..._state });
       });
-      const r = await agent_store.findAgentById(props.view.query.id);
+      const r = await agent_store.findAgentById(Number(props.view.query.id));
       if (r.error) {
         props.app.tip({
           text: [r.error.message],

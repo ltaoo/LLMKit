@@ -43,7 +43,7 @@ export function LLMProviderModelValue(props: LLMProviderModelValueProps) {
       return {
         id: _id,
         enabled: _enabled,
-        buildin: _builtin,
+        builtin: _builtin,
       };
     },
   };
@@ -200,6 +200,7 @@ type LLMProviderControllerCoreProps = {
 
 /**
  * 实际在页面上使用的，用来配置 LLM 厂商的实现
+ * @deprecated
  */
 export function LLMProviderControllerCore(
   props: LLMProviderControllerCoreProps
@@ -232,23 +233,6 @@ export function LLMProviderControllerCore(
     },
     get models() {
       return [];
-      // const buildin_models = _provider.models.map((m) => {
-      //   return LLMProviderModelValue({
-      //     id: m.id,
-      //     name: m.name,
-      //     enabled: _value.models1.find((m) => m.id === m.id)?.enabled ?? false,
-      //     buildin: true,
-      //   });
-      // });
-      // const custom_models = _value.models2.map((m) => {
-      //   return LLMProviderModelValue({
-      //     id: m.id,
-      //     name: m.name,
-      //     enabled: m.enabled,
-      //     buildin: false,
-      //   });
-      // });
-      // return [...buildin_models, ...custom_models];
     },
     updateEnabled(enabled: boolean) {
       _value.updateEnabled(enabled);
@@ -319,7 +303,7 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
             id: m.id,
             name: m.name,
             enabled: m.enabled,
-            buildin: m.builtin,
+            builtin: m.builtin,
           })),
         };
       });
@@ -478,8 +462,8 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
         {
           id: string;
           enabled: boolean;
-          apiProxyAddress?: string;
-          apiKey?: string;
+          api_proxy_address?: string;
+          api_key?: string;
           models: { id: string; enabled: boolean; builtin: boolean }[];
         }
       >
@@ -494,11 +478,11 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
         }
         const value = _values[id];
         value.updateEnabled(payload.enabled);
-        if (payload.apiProxyAddress) {
-          value.updateApiProxyAddress(payload.apiProxyAddress);
+        if (payload.api_proxy_address) {
+          value.updateApiProxyAddress(payload.api_proxy_address);
         }
-        if (payload.apiKey) {
-          value.updateApiKey(payload.apiKey);
+        if (payload.api_key) {
+          value.updateApiKey(payload.api_key);
         }
         const modelMapWithName: Record<string, string> = provider.models.reduce(
           (a, b) => {
@@ -515,7 +499,7 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
               id: m.id,
               name: modelMapWithName[m.id] || m.id,
               enabled: m.enabled,
-              builtin: m.builtin,
+              builtin: m.builtin ?? true,
             });
           })
         );
@@ -627,7 +611,12 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
     },
     /** 根据 provider_id 和 model_id 构建 LLM 服务所需的 payload */
     buildLLMServicePayload(payload: { provider_id: string; model_id: string }) {
-      console.log("[BIZ]llm_provider - buildLLMServicePayload", payload, _providers, _values);
+      console.log(
+        "[BIZ]llm_provider - buildLLMServicePayload",
+        payload,
+        _providers,
+        _values
+      );
       const provider = _providers.find((p) => p.id === payload.provider_id);
       if (!provider) {
         return Result.Err(`找不到对应的 LLM 提供商: ${payload.provider_id}`);

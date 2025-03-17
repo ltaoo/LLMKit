@@ -64,12 +64,16 @@ export const agent_store = AgentStore({
 
 在页面上渲染 `agent_store.state.agents`，可以对其进行配置，包括使用的 `LLM`，`LLM` 配置项等。
 
-## 效果预览
+## react 示例
 
 ![](./docs/llmkit_screenshot1.png)
 ![](./docs/llmkit_screenshot2.png)
 
 对应代码 [examples/react/src/App.tsx](https://github.com/ltaoo/LLMKit/blob/master/examples/react/src/App.tsx)
+
+### tauri 示例
+
+![](./docs/llmkit_example3.png)
 
 ## 项目运行
 

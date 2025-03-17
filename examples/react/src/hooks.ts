@@ -17,6 +17,7 @@ export function useViewModel<
       console.log("[HOOK]model.onStateChange", v);
       setState(v);
     });
+    model.ready();
   }, []);
 
   return [state, model];

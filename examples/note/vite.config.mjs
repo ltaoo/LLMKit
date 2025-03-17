@@ -35,6 +35,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
       "@llm": path.resolve(__dirname, "../../src"),
       axios: path.resolve(__dirname, "node_modules/axios"),
+      "@tauri-apps/api/core": path.resolve(__dirname, "node_modules/@tauri-apps/api/core"),
     },
   },
 });

@@ -167,7 +167,7 @@ export function LLMProviderManagerPage(props: ViewComponentProps) {
                           <div class="flex items-center gap-3 py-2 px-4 bg-white rounded-md border border-gray-100 shadow-sm">
                             <div class="text-gray-700">{model.name}</div>
                             <div class="flex items-center gap-3">
-                              <Show when={!model.buildin}>
+                              <Show when={!model.builtin}>
                                 <button
                                   class="text-red-500 hover:text-red-600 text-sm font-medium"
                                   onClick={() => {

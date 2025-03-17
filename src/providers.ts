@@ -13,8 +13,14 @@ export const LLMProviders = [
     models: [
       LLMProviderModelCore({
         id: "deepseek-chat",
-        name: "DeepSeek Chat",
-        desc: "DeepSeek Chat 是 DeepSeek 提供的一款智能助手，支持多轮对话、知识库问答、代码解释等功能。",
+        name: "DeepSeek-V3",
+        desc: "DeepSeek-V3 是 DeepSeek 提供的一款智能助手，支持多轮对话、知识库问答、代码解释等功能。",
+        tags: ["chat", "assistant"],
+      }),
+      LLMProviderModelCore({
+        id: "deepseek-reasoner",
+        name: "DeepSeek-R1",
+        desc: "DeepSeek-R1 是 DeepSeek 提供的一款智能助手，支持多轮对话、知识库问答、代码解释等功能。",
         tags: ["chat", "assistant"],
       }),
     ],
@@ -46,15 +52,15 @@ export const LLMProviders = [
     api_address: "https://api.openai.com/v1/chat/completions",
     models: [
       LLMProviderModelCore({
-        id: "openai-gpt-4o-mini",
-        name: "OpenAI GPT-4o Mini",
-        desc: "OpenAI GPT-4o Mini 是 OpenAI 提供的一款智能助手，支持多轮对话、知识库问答、代码解释等功能。",
+        id: "gpt-4o-mini",
+        name: "GPT-4o Mini",
+        desc: "GPT-4o Mini 是 OpenAI 提供的一款智能助手，支持多轮对话、知识库问答、代码解释等功能。",
         tags: ["chat", "assistant"],
       }),
       LLMProviderModelCore({
-        id: "openai-gpt-4o",
-        name: "OpenAI GPT-4o",
-        desc: "OpenAI GPT-4o 是 OpenAI 提供的一款智能助手，支持多轮对话、知识库问答、代码解释等功能。",
+        id: "gpt-4o",
+        name: "GPT-4o",
+        desc: "GPT-4o 是 OpenAI 提供的一款智能助手，支持多轮对话、知识库问答、代码解释等功能。",
         tags: ["chat", "assistant"],
       }),
     ],
@@ -76,8 +82,7 @@ export const LLMProviders = [
     id: "volcengine",
     name: "火山引擎",
     logo_uri: "/provider_light_doubao.png",
-    api_address:
-      "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
+    api_address: "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
     models: [
       LLMProviderModelCore({
         id: "doubao-1-5-pro-32k-250115",

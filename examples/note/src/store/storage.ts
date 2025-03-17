@@ -14,7 +14,7 @@ const DEFAULT_CACHE_VALUES = {
       enabled: boolean;
       apiProxyAddress?: string;
       apiKey?: string;
-      models: { id: string; enabled: boolean; buildin: boolean }[];
+      models: { id: string; enabled: boolean; builtin: boolean }[];
     }
   >,
   agent_configs: {} as Record<

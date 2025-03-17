@@ -11,8 +11,14 @@ import {
   ChatBoxPayloadCustomType,
 } from "./store";
 import { useViewModel } from "./hooks";
+import { LLMAgentEditorCore } from "@llm/libs/llm_agent";
 
 function AppViewModel() {
+  const $editor = LLMAgentEditorCore({
+    llm: llm_store,
+    agent: agent_store,
+  });
+
   const _state = {
     get providers() {
       return llm_store.state.providers;
@@ -50,7 +56,7 @@ function AppViewModel() {
     ui: {
       $llm: llm_store,
       $agent: agent_store,
-      $editor: agent_store.$editor,
+      $editor,
       $chatroom: chatroom,
     },
     ready() {
@@ -63,11 +69,14 @@ function AppViewModel() {
           [payload.id]: payload,
         });
       });
-      agent_store.onAgentChange((payload) => {
+      $editor.onAgentChange((payload) => {
         storage.set("agent_configs", {
           ...storage.get("agent_configs"),
           [payload.id]: payload,
         });
+      });
+      $editor.onStateChange(() => {
+        bus.emit(Events.StateChange, { ..._state });
       });
       llm_store.onStateChange(() => {
         bus.emit(Events.StateChange, { ..._state });
@@ -79,19 +88,19 @@ function AppViewModel() {
         bus.emit(Events.StateChange, { ..._state });
       });
     },
-    startChat(agent: { id: string }) {
-      const matched = agent_store.findAgentById(agent.id);
-      if (!matched) {
+    async startChat(agent: { id: number }) {
+      const r = await agent_store.findAgentById(agent.id);
+      if (r.error) {
         return;
       }
-      chatroom.startChat([matched]);
+      chatroom.startChat([r.data]);
     },
-    addAgentToChat(agent: { id: string }) {
-      const matched = agent_store.findAgentById(agent.id);
-      if (!matched) {
+    async addAgentToChat(agent: { id: number }) {
+      const r = await agent_store.findAgentById(agent.id);
+      if (r.error) {
         return;
       }
-      chatroom.addAgentToChat(matched);
+      chatroom.addAgentToChat(r.data);
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -100,11 +109,7 @@ function AppViewModel() {
 }
 
 export function App() {
-  const [state, model] = useViewModel(AppViewModel);
-
-  useEffect(() => {
-    model.ready();
-  }, []);
+  const [state, $model] = useViewModel(AppViewModel);
 
   return (
     <div className="w-screen h-screen">
@@ -133,7 +138,7 @@ export function App() {
                         type="checkbox"
                         checked={provider.enabled}
                         onChange={(e) => {
-                          model.ui.$llm.toggleProviderEnabled({
+                          $model.ui.$llm.toggleProviderEnabled({
                             provider_id: provider.id,
                             enabled: e.target.checked,
                           });
@@ -151,7 +156,7 @@ export function App() {
                                 placeholder={provider.placeholder}
                                 value={provider.apiProxyAddress}
                                 onChange={(event) => {
-                                  model.ui.$llm.updateProviderApiProxyAddress({
+                                  $model.ui.$llm.updateProviderApiProxyAddress({
                                     provider_id: provider.id,
                                     apiProxyAddress: event.target.value,
                                   });
@@ -164,7 +169,7 @@ export function App() {
                                 className="w-full border"
                                 value={provider.apiKey}
                                 onChange={(event) => {
-                                  model.ui.$llm.updateProviderApiKey({
+                                  $model.ui.$llm.updateProviderApiKey({
                                     provider_id: provider.id,
                                     apiKey: event.target.value,
                                   });
@@ -180,11 +185,11 @@ export function App() {
                               >
                                 <div className="text-gray-900">{m.name}</div>
                                 <div className="flex items-center">
-                                  {!m.buildin && (
+                                  {!m.builtin && (
                                     <div
                                       className="text-sm mr-2 cursor-pointer whitespace-nowrap"
                                       onClick={() => {
-                                        model.ui.$llm.deleteProviderModel({
+                                        $model.ui.$llm.deleteProviderModel({
                                           provider_id: provider.id,
                                           model_id: m.id,
                                         });
@@ -198,7 +203,7 @@ export function App() {
                                     type="checkbox"
                                     checked={m.enabled}
                                     onChange={(e) => {
-                                      model.ui.$llm.toggleModelEnabled({
+                                      $model.ui.$llm.toggleModelEnabled({
                                         provider_id: provider.id,
                                         model_id: m.id,
                                         enabled: e.target.checked,
@@ -218,7 +223,7 @@ export function App() {
                                 ""
                               }
                               onChange={(event) => {
-                                model.ui.$llm.updatePendingModel({
+                                $model.ui.$llm.updatePendingModel({
                                   provider_id: provider.id,
                                   id: event.target.value,
                                 });
@@ -226,7 +231,7 @@ export function App() {
                             />
                             <button
                               onClick={() => {
-                                model.ui.$llm.addPendingModel({
+                                $model.ui.$llm.addPendingModel({
                                   provider_id: provider.id,
                                 });
                               }}
@@ -247,8 +252,7 @@ export function App() {
           <h2 className="text-lg font-bold h-8 mb-4">Agent</h2>
           <div className="bg-white rounded-lg shadow p-4">
             <div className="space-y-6">
-              {agent_store.state &&
-                agent_store.state.agents &&
+              {agent_store.state.agents &&
                 agent_store.state.agents.map((agent) => (
                   <div key={agent.id}>
                     <div className="font-medium text-gray-900 mb-4">
@@ -262,7 +266,7 @@ export function App() {
                       onChange={(event) => {
                         const [provider_id, model_id] =
                           event.currentTarget.value.split(":");
-                        model.ui.$editor.selectProviderModelForAgent({
+                        $model.ui.$editor.selectProviderModelForAgent({
                           agent_id: agent.id,
                           provider_id: provider_id,
                           model_id: model_id,
@@ -272,20 +276,7 @@ export function App() {
                       {state.enabledProviders.map((provider) => (
                         <optgroup key={provider.id} label={provider.name}>
                           {provider.models.map((m) => (
-                            <option
-                              key={m.id}
-                              value={`${provider.id}:${m.id}`}
-                              // selected={
-                              //   agent.llm.provider_id === provider.id &&
-                              //   agent.llm.model_id === m.id
-                              // }
-                              // onClick={() => {
-                              //   model.ui.$editor.selectProviderModel({
-                              //     provider_id: provider.id,
-                              //     model_id: m.id,
-                              //   });
-                              // }}
-                            >
+                            <option key={m.id} value={`${provider.id}:${m.id}`}>
                               {m.name}
                             </option>
                           ))}
@@ -293,18 +284,10 @@ export function App() {
                       ))}
                     </select>
                     <div className="flex items-center gap-2">
-                      {/* <button
-                        className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        onClick={() => {
-                          model.startChat(agent);
-                        }}
-                      >
-                        对话
-                      </button> */}
                       <button
                         className="px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                         onClick={() => {
-                          model.addAgentToChat(agent);
+                          $model.addAgentToChat(agent);
                         }}
                       >
                         添加到对话
@@ -466,19 +449,43 @@ export function App() {
               })}
             </div>
             <div className="absolute left-0 bottom-[12px] w-full ">
-              <textarea
-                className="w-full p-2 border rounded mb-4"
-                rows={6}
-                value={state.inputting}
-                onChange={(event) => {
-                  model.ui.$chatroom.input(event.target.value);
-                }}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    model.ui.$chatroom.sendMessage(event.currentTarget.value);
-                  }
-                }}
-              />
+              <div className="border-t border-gray-200 bg-white p-4">
+                <div className="max-w-4xl mx-auto">
+                  <div className="relative">
+                    <textarea
+                      className="w-full resize-none rounded-lg border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 px-4 py-3 min-h-[120px] transition-colors duration-200"
+                      placeholder="Type your message here..."
+                      autoCapitalize="off"
+                      autoComplete="off"
+                      value={state.inputting}
+                      onChange={(event) => {
+                        $model.ui.$chatroom.input(event.target.value);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" && !event.shiftKey) {
+                          event.preventDefault();
+                          $model.ui.$chatroom.sendMessage(
+                            event.currentTarget.value
+                          );
+                        }
+                      }}
+                    />
+                    <div className="absolute bottom-3 right-3 flex items-center space-x-2">
+                      <button
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
+                        onClick={() =>
+                          $model.ui.$chatroom.sendMessage(state.inputting)
+                        }
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500 text-right">
+                    Press Enter to send, Shift + Enter for new line
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

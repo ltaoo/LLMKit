@@ -1,16 +1,14 @@
 /**
  * @file 首页
  */
-import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { For, onCleanup, onMount, Show } from "solid-js";
 import Loader from "lucide-solid/icons/loader";
 import Trash from "lucide-solid/icons/trash";
 import dayjs from "dayjs";
 
 import { base, Handler } from "@llm/libs/base";
-import { ChatBoxPayloadType } from "@llm/libs/chatbox";
 
 import { ViewComponent, ViewComponentProps } from "@/store/types";
-import { llm_store } from "@/store/llm";
 import { agent_store } from "@/store/agents";
 import { NoteStore } from "@/biz/note_store";
 import { NoteCore } from "@/biz/note";
@@ -341,15 +339,6 @@ function HomeIndexViewModel(props: ViewComponentProps) {
 
       bus.emit(Events.StateChange, { ..._state });
     },
-    // 添加处理点击外部的方法
-    handleOutsideClick(event: MouseEvent) {
-      // 检查点击是否在润色建议框外
-      const polishedTextElement = document.querySelector('.polished-text-container');
-      if (polishedTextElement && !polishedTextElement.contains(event.target as Node)) {
-        _polishedText = "";
-        bus.emit(Events.StateChange, { ..._state });
-      }
-    },
   };
 }
 
@@ -368,16 +357,6 @@ export const HomeIndexPage: ViewComponent = (props) => {
     window.addEventListener("keydown", handleKeyDown);
     onCleanup(() => {
       window.removeEventListener("keydown", handleKeyDown);
-    });
-
-    // 添加点击事件监听
-    const handleClick = (e: MouseEvent) => {
-      $model.handleOutsideClick(e);
-    };
-    document.addEventListener('click', handleClick);
-
-    onCleanup(() => {
-      document.removeEventListener('click', handleClick);
     });
   });
 
@@ -517,7 +496,7 @@ export const HomeIndexPage: ViewComponent = (props) => {
       {/* 添加润色文本显示 */}
       <Show when={state().polishedText}>
         <div
-          class="fixed z-40 bg-white shadow-lg rounded-lg p-4 transform -translate-x-1/2 transition-opacity duration-200 max-w-md polished-text-container"
+          class="fixed z-40 bg-white shadow-lg rounded-lg p-4 transform -translate-x-1/2 transition-opacity duration-200 max-w-md"
           style={{
             left: `${state().selection.x}px`,
             top: `${state().selection.rect?.bottom || 0 + 10}px`,
