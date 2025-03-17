@@ -23,7 +23,7 @@ export const HomeLayout: ViewComponent = (props) => {
     // { id: "search", icon: "🔍", label: "搜索" },
     { id: "llm", icon: "🤖", label: "LLM厂商", path: "root.home_layout.llm_provider" },
     { id: "agent", icon: "🎯", label: "Agent", path: "root.home_layout.llm_agent" },
-    { id: "settings", icon: "⚙️", label: "设置", path: "root.home_layout.settings" },
+    // { id: "settings", icon: "⚙️", label: "设置", path: "root.home_layout.settings" },
   ];
 
   return (

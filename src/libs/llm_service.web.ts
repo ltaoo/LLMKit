@@ -59,6 +59,13 @@ export function LLMServiceInWeb(props: LLMServiceInWebProps): LLMService {
       if (r2.error) {
         return Result.Err(r2.error);
       }
+      if (r2.data.error) {
+        const msg = r2.data.error.message;
+        if (msg) {
+          return Result.Err(msg);
+        }
+        return Result.Err("调用模型发生错误");
+      }
       const content = r2.data.choices[0].message.content;
       return Result.Ok(content);
     },

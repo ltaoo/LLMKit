@@ -188,7 +188,7 @@ INSERT INTO LLM_AGENT (
     1,
     '{}',
     'deepseek',
-    'deepseek-v3',
+    'deepseek-chat',
     1,
     '{}'
 ),
@@ -200,7 +200,7 @@ INSERT INTO LLM_AGENT (
     1,
     '{}',
     'deepseek',
-    'deepseek-v3',
+    'deepseek-chat',
     1,
     '{}'
 ),
@@ -212,7 +212,7 @@ INSERT INTO LLM_AGENT (
     1,
     '{}',
     'deepseek',
-    'deepseek-v3',
+    'deepseek-chat',
     1,
     '{}'
 ),
@@ -224,7 +224,7 @@ INSERT INTO LLM_AGENT (
     1,
     '{}',
     'deepseek',
-    'deepseek-v3',
+    'deepseek-chat',
     1,
     '{}'
 );
@@ -282,34 +282,37 @@ INSERT INTO LLM_PROVIDER_MODEL (
     llm_provider_id,
     builtin
 ) VALUES
+-- https://api-docs.deepseek.com/zh-cn/
 (
-    'deepseek-v3',
-    'DeepSeek V3',
+    'deepseek-chat',
+    'DeepSeek-V3',
     1,
     'deepseek',
     1
 ),
 (
-    'deepseek-r1',
-    'DeepSeek R1',
+    'deepseek-reasoner',
+    'DeepSeek-R1',
     0,
     'deepseek',
     1
 ),
+-- https://platform.openai.com/docs/models/gpt-4o
 (
-    'openai-gpt-4o-mini',
-    'OpenAI GPT-4o Mini',
+    'gpt-3.5-turbo',
+    'GPT-3.5 Turbo',
     0,
     'openai',
     1
 ),
 (
-    'openai-gpt-4o',
-    'OpenAI GPT-4o',
+    'gpt-4o',
+    'GPT-4o',
     0,
     'openai', 
     1
 ),
+-- https://www.volcengine.com/docs/82379/1330310
 (
     'doubao-1-5-pro-32k-250115',
     'doubao-1.5-pro',
@@ -359,3 +362,18 @@ INSERT INTO LLM_PROVIDER_MODEL (
     'siliconflow',
     1
 ); 
+
+INSERT INTO NOTE (
+    id,
+    name,
+    content,
+    filepath,
+    parent_filepath
+) VALUES
+(
+    1,
+    '示例笔记',
+    '这是一个示例笔记，可以选中文本，然后点击“润色”按钮，即可调用 Agent 润色文本。',
+    'example.md',
+    '/'
+)

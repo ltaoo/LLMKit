@@ -18,6 +18,7 @@ type ChatRoomCoreProps = {
 export function ChatRoomCore(props: ChatRoomCoreProps) {
   let _agents: LLMAgentCore[] = props.agents ?? [];
   let _inputting: string = "";
+  let _loading = false;
   let _sessions: ChatSessionCore[] = [];
   let _session: ChatSessionCore | null = null;
   let _boxes: ChatBox[] = [];
@@ -25,6 +26,9 @@ export function ChatRoomCore(props: ChatRoomCoreProps) {
   const _state = {
     get inputting() {
       return _inputting;
+    },
+    get loading() {
+      return _loading;
     },
     get agents() {
       return _agents.map((agent) => {
@@ -90,6 +94,9 @@ export function ChatRoomCore(props: ChatRoomCoreProps) {
       bus.emit(Events.StateChange, { ..._state });
     },
     sendMessage(text?: string) {
+      if (_loading) {
+        return;
+      }
       const t = text || _inputting.trim();
       if (!t) {
         console.error("请输入内容");
@@ -110,7 +117,11 @@ export function ChatRoomCore(props: ChatRoomCoreProps) {
       );
       for (let i = 0; i < _agents.length; i += 1) {
         const agent = _agents[i];
+        _loading = true;
+        bus.emit(Events.StateChange, { ..._state });
         agent.request(t).then((r: Result<any>) => {
+          _loading = false;
+          bus.emit(Events.StateChange, { ..._state });
           if (r.error) {
             _boxes.push(
               ChatBox({

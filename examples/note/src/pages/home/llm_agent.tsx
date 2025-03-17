@@ -2,22 +2,28 @@
  * LLM 助手管理
  */
 import { For, Show } from "solid-js";
-import { WebviewWindow, getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import Trash from "lucide-solid/icons/trash-2";
+import PenEdit from "lucide-solid/icons/edit-2";
 
 import { base, Handler } from "@llm/libs/base";
-import { LLMAgentCore, LLMAgentEditorCore } from "@llm/libs/llm_agent";
+import { LLMAgentEditorCore } from "@llm/libs/llm_agent";
 
 import { agent_store } from "@/store/agents";
 import { llm_store } from "@/store/llm";
 import { ViewComponentProps } from "@/store/types";
-import { fetch_llm_agents, show_chat_window, update_llm_agent } from "@/biz/services";
+import {
+  fetch_llm_agents,
+  show_chat_window,
+  update_llm_agent,
+  create_llm_agent,
+  delete_llm_agent,
+} from "@/biz/services";
 import { useViewModel } from "@/hooks";
 import { DialogCore } from "@/domains/ui";
 import { ListCore } from "@/domains/list";
-import { Button, Dialog, ListView } from "@/components/ui";
+import { Dialog } from "@/components/ui";
 import { DynamicForm } from "@/components/ui/dynamci-form";
 import { RequestCore } from "@/domains/request";
-import { debounce } from "@/utils/lodash/debounce";
 
 function LLMAgentManagerViewModel(props: ViewComponentProps) {
   const $agent_dialog = new DialogCore({
@@ -32,6 +38,8 @@ function LLMAgentManagerViewModel(props: ViewComponentProps) {
     agent: {
       list: new ListCore(new RequestCore(fetch_llm_agents, { client: props.client })),
       update: new RequestCore(update_llm_agent, { client: props.client }),
+      create: new RequestCore(create_llm_agent, { client: props.client }),
+      delete: new RequestCore(delete_llm_agent, { client: props.client }),
     },
   };
   const _state = {
@@ -42,7 +50,16 @@ function LLMAgentManagerViewModel(props: ViewComponentProps) {
       return llm_store.state.enabledProviders;
     },
     get current_agent() {
-      return $editor.state;
+      return {
+        id: $editor.state.id,
+        name: $editor.state.name,
+        desc: $editor.state.desc,
+        prompt: $editor.state.prompt,
+        builtin: $editor.state.builtin,
+        provider_id: $editor.state.llm.provider_id,
+        model_id: $editor.state.llm.model_id,
+        provider_configure: $editor.providerConfigure,
+      };
     },
   };
 
@@ -55,8 +72,12 @@ function LLMAgentManagerViewModel(props: ViewComponentProps) {
   const bus = base<TheTypesOfEvents>();
   $agent_dialog.onOk(async () => {
     const payload = $editor.toJSON();
-    // updateAgent(payload);
-    const r = await _service.agent.update.run(payload);
+    const r = await (() => {
+      if ($editor.isCreateAgent) {
+        return _service.agent.create.run(payload);
+      }
+      return _service.agent.update.run(payload);
+    })();
     if (r.error) {
       props.app.tip({
         text: [r.error.message],
@@ -64,25 +85,8 @@ function LLMAgentManagerViewModel(props: ViewComponentProps) {
       return;
     }
     $agent_dialog.hide();
+    _service.agent.list.init();
   });
-
-  // const updateAgent = debounce(
-  //   800,
-  //   (payload: {
-  //     id: string;
-  //     name?: string;
-  //     desc?: string;
-  //     prompt?: string;
-  //     llm: {
-  //       provider_id: string | null;
-  //       model_id: string | null;
-  //       extra: Record<string, any>;
-  //     };
-  //     config?: Record<string, any>;
-  //   }) => {
-  //     _service.agent.update.run(payload);
-  //   }
-  // );
 
   return {
     state: _state,
@@ -124,14 +128,11 @@ function LLMAgentManagerViewModel(props: ViewComponentProps) {
       }
     },
     showAgentCreateDialog() {
-      props.app.tip({
-        text: ["正在开发中"],
-      });
-      // agent_store.$editor.create();
-      // $agent_dialog.updateTitle("新增代理");
-      // $agent_dialog.show();
+      $editor.startCreateAgent();
+      $agent_dialog.setTitle("新增 Agent");
+      $agent_dialog.show();
     },
-    async startEditAgent(agent: { id: number | string }) {
+    async showAgentEditDialog(agent: { id: number | string }) {
       const r = await agent_store.findAgentById(agent.id);
       if (r.error) {
         props.app.tip({
@@ -142,6 +143,18 @@ function LLMAgentManagerViewModel(props: ViewComponentProps) {
       $editor.selectAgent(r.data);
       $agent_dialog.setTitle(`${r.data.name} - 编辑`);
       $agent_dialog.show();
+    },
+    async deleteAgent(agent: { id: number | string }) {
+      const r = await _service.agent.delete.run({
+        id: agent.id,
+      });
+      if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
+        return;
+      }
+      agent_store.removeAgents([agent.id.toString()]);
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
@@ -166,23 +179,30 @@ export function LLMAgentManagerPage(props: ViewComponentProps) {
         </button>
       </div>
       {/* Agents Grid */}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[calc(100vh-100px)] overflow-y-auto">
         <For each={state().agents}>
           {(agent) => (
             <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all relative">
-              <button
-                class="absolute top-4 right-4 p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
-                onClick={() => {
-                  $model.startEditAgent(agent);
-                  // $model.ui.$agent_dialog.updateTitle("编辑代理");
-                  // $model.ui.$agent_dialog.show();
-                }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 32 32" fill="currentColor">
-                  <path d="M2 26H30V28H2zM25.4 9c.8-.8.8-2 0-2.8 0 0 0 0 0 0l-3.6-3.6c-.8-.8-2-.8-2.8 0 0 0 0 0 0 0l-15 15V24h6.4L25.4 9zM20.4 4L24 7.6l-3 3L17.4 7 20.4 4zM6 22v-3.6l10-10 3.6 3.6-10 10H6z" />
-                </svg>
-              </button>
-
+              <div class="absolute top-4 right-4 flex items-center gap-2">
+                <button
+                  class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={() => {
+                    $model.showAgentEditDialog(agent);
+                  }}
+                >
+                  <PenEdit class="w-4 h-4" />
+                </button>
+                <Show when={agent.builtin === false}>
+                  <button
+                    class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                    onClick={() => {
+                      $model.deleteAgent(agent);
+                    }}
+                  >
+                    <Trash class="w-4 h-4" />
+                  </button>
+                </Show>
+              </div>
               <div class="flex items-center gap-3 mb-4">
                 <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                   <span class="text-blue-600 font-medium">🤖</span>
@@ -217,12 +237,12 @@ export function LLMAgentManagerPage(props: ViewComponentProps) {
         </For>
       </div>
 
-      {/* Edit Dialog */}
       <Dialog store={$model.ui.$agent_dialog}>
         <div class="relative w-[560px] max-h-[80vh] overflow-y-auto space-y-6">
           <div class="space-y-2">
             <div class="text-sm font-medium text-gray-700">名称</div>
             <input
+              disabled={state().current_agent.builtin}
               value={state().current_agent.name}
               type="text"
               class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -235,6 +255,7 @@ export function LLMAgentManagerPage(props: ViewComponentProps) {
           <div class="space-y-2">
             <div class="text-sm font-medium text-gray-700">描述</div>
             <input
+              disabled={state().current_agent.builtin}
               value={state().current_agent.desc}
               type="text"
               class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
@@ -247,6 +268,7 @@ export function LLMAgentManagerPage(props: ViewComponentProps) {
           <div class="space-y-2">
             <div class="text-sm font-medium text-gray-700">提示词</div>
             <textarea
+              disabled={state().current_agent.builtin}
               value={state().current_agent.prompt}
               class="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg h-32 resize-none focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors"
               onChange={(e) => {
@@ -254,7 +276,6 @@ export function LLMAgentManagerPage(props: ViewComponentProps) {
               }}
             ></textarea>
           </div>
-
           <div class="space-y-3">
             <div class="text-sm font-medium text-gray-700">选择模型</div>
             <div class="grid grid-cols-2 gap-4">

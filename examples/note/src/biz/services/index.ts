@@ -144,6 +144,23 @@ export function find_llm_agent_by_id(payload: { id: string | number }) {
     id: Number(payload.id),
   });
 }
+export function find_llm_agent_by_name(payload: { name: string }) {
+  return request.post<{
+    id: string;
+    name: string;
+    desc: string;
+    avatar_uri: string;
+    prompt: string;
+    llm_config: string;
+    llm_provider_id: string;
+    llm_model_id: string;
+    builtin: number;
+    config: string;
+    created_at: string;
+  }>("find_llm_agent_by_name", {
+    name: payload.name,
+  });
+}
 // export const find_llm_agent_by_id_request =(payload: { id: string }) {
 // return ;
 export function update_llm_agent(payload: {
@@ -159,4 +176,21 @@ export function update_llm_agent(payload: {
   config?: Record<string, any>;
 }) {
   return request.post("update_llm_agent", { payload });
+}
+
+export function create_llm_agent(payload: {
+  name: string;
+  desc?: string;
+  prompt: string;
+  llm: {
+    provider_id: string | null;
+    model_id: string | null;
+    extra: Record<string, any>;
+  };
+}) {
+  return request.post("create_llm_agent", { payload });
+}
+
+export function delete_llm_agent(payload: { id: string | number }) {
+  return request.post("delete_llm_agent", { id: Number(payload.id) });
 }

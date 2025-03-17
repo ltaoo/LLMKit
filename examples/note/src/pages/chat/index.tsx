@@ -11,6 +11,7 @@ import { ChatBoxPayloadCustomType } from "@/store/agents";
 import { agent_store } from "@/store/agents";
 import { llm_store } from "@/store/llm";
 import { useViewModel } from "@/hooks";
+import Loader from "lucide-solid/icons/loader";
 
 function AgentChatViewModel(props: ViewComponentProps) {
   console.log("[PAGE]chat/index - AgentChatViewModel", props.view.query);
@@ -62,6 +63,9 @@ function AgentChatViewModel(props: ViewComponentProps) {
     },
     get inputting() {
       return _chatroom.state.inputting;
+    },
+    get loading() {
+      return _chatroom.state.loading;
     },
     get error() {
       return _error
@@ -258,7 +262,9 @@ export function AgentChatPage(props: ViewComponentProps) {
                   class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
                   onClick={() => $model.ui.$chatroom.sendMessage(state().inputting)}
                 >
-                  Send
+                  <Show when={!state().loading} fallback={<Loader class="w-4 h-4 animate-spin" />}>
+                    Send
+                  </Show>
                 </button>
               </div>
             </div>

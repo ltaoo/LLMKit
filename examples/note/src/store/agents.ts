@@ -4,7 +4,7 @@ import { ChatBoxPayload, ChatBoxPayloadType } from "@llm/libs/chatbox";
 import { LLMServiceInWeb } from "@llm/libs/llm_service.web";
 import { build_request } from "@llm/libs/request_builder";
 
-import { find_llm_agent_by_id } from "@/biz/services";
+import { find_llm_agent_by_id, find_llm_agent_by_name } from "@/biz/services";
 import { RequestCore } from "@/domains/request";
 
 import { llm_store } from "./llm";
@@ -43,12 +43,30 @@ export const agent_store = LLMAgentStore({
 const find_llm_agent_by_id_request = new RequestCore(find_llm_agent_by_id, {
   client,
 });
+const find_llm_agent_by_name_request = new RequestCore(find_llm_agent_by_name, {
+  client,
+});
 agent_store.findAgentById = async (id: string) => {
   const r1 = agent_store.agents.find((agent) => agent.id === id);
   if (r1) {
     return Result.Ok(r1);
   }
   const r = await find_llm_agent_by_id_request.run({ id });
+  if (r.error) {
+    return Result.Err(r.error);
+  }
+  const r2 = await agent_store.buildFromOuter(r.data);
+  if (r2.error) {
+    return Result.Err(r2.error);
+  }
+  return Result.Ok(r2.data);
+};
+agent_store.findAgentByName = async (name: string) => {
+  const r1 = agent_store.agents.find((agent) => agent.name === name);
+  if (r1) {
+    return Result.Ok(r1);
+  }
+  const r = await find_llm_agent_by_name_request.run({ name });
   if (r.error) {
     return Result.Err(r.error);
   }
@@ -67,7 +85,7 @@ agent_store.buildFromOuter = (data) => {
     llm_config: {
       provider_id: data.llm_provider_id,
       model_id: data.llm_model_id,
-      extra: JSON.parse(data.config),
+      extra: JSON.parse(data.llm_config),
     },
     config: JSON.parse(data.config),
     builtin: data.builtin === 1,

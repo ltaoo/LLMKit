@@ -49,7 +49,7 @@ pub async fn create_note(
             }
         }
     };
-    println!("[]create_note - new_name: {}", new_name);
+    // println!("[]create_note - new_name: {}", new_name);
     let r = sqlx::query("INSERT INTO `NOTE` (name, content, filepath, parent_filepath) VALUES (?1, ?2, ?3, ?4)")
         .bind(&new_name)
         .bind("")
@@ -70,7 +70,7 @@ pub async fn create_note(
     let note = r.unwrap();
     let note_id = note.last_insert_rowid();
 
-    println!("[]create_note - after create {} with name {}", note_id, new_name);
+    // println!("[]create_note - after create {} with name {}", note_id, new_name);
     Ok(json!({
         "code": 0,
         "data": {
@@ -196,6 +196,28 @@ pub async fn update_note(id: i32, title: Option<String>, content: Option<String>
     Ok(json!({
         "code": 0,
         "msg": "Update successful",
+        "data": Value::Null
+    }))
+}
+
+#[tauri::command]
+pub async fn delete_note(id: i32, state: tauri::State<'_, AppState>) -> Result<Value, Error> {
+    let db = &state.db;
+    let r = sqlx::query("DELETE FROM `NOTE` WHERE `id` = ?1")
+        .bind(id)
+        .execute(db)
+        .await
+        .map_err(|e| format!("Failed to delete note {}", e));
+    if r.is_err() {
+        return Ok(json!({
+            "code": 301,
+            "msg": "Delete failed",
+            "data": Value::Null
+        }));
+    }
+    Ok(json!({
+        "code": 0,
+        "msg": "Delete successful",
         "data": Value::Null
     }))
 }

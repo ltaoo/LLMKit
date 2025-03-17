@@ -99,7 +99,9 @@ export function LLMProviderManagerPage(props: ViewComponentProps) {
 
   return (
     <div class="w-full max-w-[1200px] p-4">
-      <h1 class="text-2xl font-bold text-gray-800 mb-6">LLM 服务商</h1>
+      <div class="mb-6 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">LLM 服务商</h1>
+      </div>
       <div class="space-y-6 overflow-y-auto max-h-[calc(100vh-100px)]">
         <For each={state().providers}>
           {(provider) => (

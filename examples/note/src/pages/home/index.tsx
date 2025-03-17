@@ -3,6 +3,7 @@
  */
 import { createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import Loader from "lucide-solid/icons/loader";
+import Trash from "lucide-solid/icons/trash";
 import dayjs from "dayjs";
 
 import { base, Handler } from "@llm/libs/base";
@@ -41,7 +42,7 @@ function HomeIndexViewModel(props: ViewComponentProps) {
 
   const _state = {
     get response() {
-      return _noteStore.ui.$list.response;
+      return { ..._noteStore.ui.$list.response };
     },
     get currentNote() {
       return _currentNote;
@@ -83,10 +84,10 @@ function HomeIndexViewModel(props: ViewComponentProps) {
 
   // 添加一个工具函数来处理换行
   function convertToPlainText(html: string) {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.innerHTML = html;
     // 将 <div> 和 <br> 转换为换行符
-    const content = div.innerText.replace(/\n\n/g, '\n');
+    const content = div.innerText.replace(/\n\n/g, "\n");
     return content;
   }
 
@@ -260,11 +261,16 @@ function HomeIndexViewModel(props: ViewComponentProps) {
     },
     // 添加文本操作方法
     async polishText() {
-      const agent = agent_store.findAgentById("2");
-      if (!agent) {
+      const r1 = await agent_store.findAgentByName("润色");
+      if (r1.error) {
         console.error("[PAGE]index - polishText - agent not found");
+        props.app.tip({
+          text: [r1.error.message],
+        });
         return;
       }
+      const agent = r1.data;
+      agent_store.appendAgents([agent]);
       _textPending = true;
       bus.emit(Events.StateChange, { ..._state });
       const r = await agent.request<string>(_selection.text);
@@ -314,6 +320,36 @@ function HomeIndexViewModel(props: ViewComponentProps) {
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
     },
+    // 添加删除笔记的方法
+    async deleteNote(id: number) {
+      const r = await _noteStore.deleteNote(id);
+      if (r.error) {
+        props.app.tip({
+          text: [r.error.message],
+        });
+        return;
+      }
+      // 如果删除的是当前笔记，清空当前笔记
+      if (_currentNote?.id === id) {
+        _currentNote = null;
+      }
+      // 从列表中移除该笔记
+      _noteStore.ui.$list.modifyResponse((response) => {
+        response.dataSource = response.dataSource.filter((note) => note.id !== id);
+        return response;
+      });
+
+      bus.emit(Events.StateChange, { ..._state });
+    },
+    // 添加处理点击外部的方法
+    handleOutsideClick(event: MouseEvent) {
+      // 检查点击是否在润色建议框外
+      const polishedTextElement = document.querySelector('.polished-text-container');
+      if (polishedTextElement && !polishedTextElement.contains(event.target as Node)) {
+        _polishedText = "";
+        bus.emit(Events.StateChange, { ..._state });
+      }
+    },
   };
 }
 
@@ -329,10 +365,19 @@ export const HomeIndexPage: ViewComponent = (props) => {
         $model.saveNote();
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
     onCleanup(() => {
       window.removeEventListener("keydown", handleKeyDown);
+    });
+
+    // 添加点击事件监听
+    const handleClick = (e: MouseEvent) => {
+      $model.handleOutsideClick(e);
+    };
+    document.addEventListener('click', handleClick);
+
+    onCleanup(() => {
+      document.removeEventListener('click', handleClick);
     });
   });
 
@@ -366,8 +411,22 @@ export const HomeIndexPage: ViewComponent = (props) => {
                   }`}
                   onClick={() => $model.selectNote(note)}
                 >
-                  <h3 class="font-medium text-gray-900 mb-1">{note.title}</h3>
-                  <p class="text-sm text-gray-500 truncate">{note.created_at}</p>
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="font-medium text-gray-900 mb-1">{note.title}</h3>
+                      <p class="text-sm text-gray-500 truncate">{note.created_at}</p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        $model.deleteNote(note.id);
+                      }}
+                      class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-gray-100 rounded-full transition-colors"
+                      title="删除笔记"
+                    >
+                      <Trash class="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               )}
             </For>
@@ -458,7 +517,7 @@ export const HomeIndexPage: ViewComponent = (props) => {
       {/* 添加润色文本显示 */}
       <Show when={state().polishedText}>
         <div
-          class="fixed z-40 bg-white shadow-lg rounded-lg p-4 transform -translate-x-1/2 transition-opacity duration-200 max-w-md"
+          class="fixed z-40 bg-white shadow-lg rounded-lg p-4 transform -translate-x-1/2 transition-opacity duration-200 max-w-md polished-text-container"
           style={{
             left: `${state().selection.x}px`,
             top: `${state().selection.rect?.bottom || 0 + 10}px`,

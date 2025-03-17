@@ -105,6 +105,9 @@ export class SingleFieldCore<T extends FormInputInterface<any>> {
     }
     return Result.Ok(value);
   }
+  clear() {
+    this.setValue(this._input.defaultValue);
+  }
 }
 
 type ArrayFieldCoreProps<
@@ -164,7 +167,11 @@ export class ArrayFieldCore<
     }
     //     bus.emit(Events.StateChange, _state);
   }
-  get fields(): (SingleFieldCore<any> | ArrayFieldCore<any> | ObjectFieldCore<any>)[] {
+  get fields(): (
+    | SingleFieldCore<any>
+    | ArrayFieldCore<any>
+    | ObjectFieldCore<any>
+  )[] {
     return this._fields;
   }
   async validate(): Promise<Result<ArrayFieldValue<T>>> {
@@ -175,6 +182,12 @@ export class ArrayFieldCore<
       results.push(r);
     }
     return Result.Ok(results);
+  }
+  clear() {
+    for (let i = 0; i < this._fields.length; i += 1) {
+      const field = this._fields[i];
+      field.clear();
+    }
   }
   append() {
     let field = this._field(this._fields.length);
@@ -279,7 +292,10 @@ export class ObjectFieldCore<
       field.setValue(values[key]);
     }
   }
-  get fields(): Record<string, SingleFieldCore<any> | ArrayFieldCore<any> | ObjectFieldCore<any>> {
+  get fields(): Record<
+    string,
+    SingleFieldCore<any> | ArrayFieldCore<any> | ObjectFieldCore<any>
+  > {
     return this._fields;
   }
   async validate(): Promise<Result<ObjectValue<T>>> {
@@ -301,6 +317,14 @@ export class ObjectFieldCore<
       return Result.Err(new BizError(errors.join("\n")));
     }
     return Result.Ok(results);
+  }
+  clear() {
+    const keys = Object.keys(this._fields);
+    for (let i = 0; i < keys.length; i += 1) {
+      const key = keys[i];
+      const field = this._fields[key];
+      field.clear();
+    }
   }
   handleValueChange(path: string, value: any) {
     const field = this._fields[path];

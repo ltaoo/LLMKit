@@ -226,3 +226,115 @@ pub async fn find_llm_agent_by_id(id: i64, state: tauri::State<'_, AppState>) ->
         }
     }))
 }
+
+
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn find_llm_agent_by_name(name: String, state: tauri::State<'_, AppState>) -> Result<Value, Error> {
+    let db = &state.db;
+    let r = sqlx::query_as::<_, LLMAgentRecord>("SELECT * FROM `LLM_AGENT` WHERE `name` = ?")
+        .bind(name)
+        .fetch_one(db)
+        .await
+        .map_err(|e| format!("Failed to find agent {}", e));
+    if r.is_err() {
+        return Ok(json!({
+            "code": 301,
+            "msg": r.err().unwrap().to_string(),
+            "data": Value::Null
+        }));
+    }
+    let agent: LLMAgentRecord = r.unwrap();
+    Ok(json!({
+        "code": 0,
+        "data": {
+            "id": agent.id,
+            "name": agent.name,
+            "desc": agent.desc,
+            "prompt": agent.prompt,
+            "tags": agent.tags,
+            "agent_type": agent.agent_type,
+            "llm_config": agent.llm_config,
+            "llm_provider_id": agent.llm_provider_id,
+            "llm_model_id": agent.llm_model_id,
+            "builtin": agent.builtin,
+            "config": agent.config,
+            "created_at": agent.created_at
+        }
+    }))
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn create_llm_agent(payload: Value, state: tauri::State<'_, AppState>) -> Result<Value, Error> {
+    let db = &state.db;
+
+    let name = payload.get("name").unwrap().as_str();
+    let desc = payload.get("desc").unwrap().as_str();
+    let prompt = payload.get("prompt").unwrap().as_str();
+
+    let mut llm_provider_id = "";
+    let mut llm_model_id = "";
+    let mut llm_config = String::from("{}");
+    if let Some(llm) = payload.get("llm") {
+        if let Some(provider_id) = llm.get("provider_id") {
+            llm_provider_id = provider_id.as_str().unwrap();
+        }
+        if let Some(model_id) = llm.get("model_id") {
+            llm_model_id = model_id.as_str().unwrap();
+        }
+        if let Some(extra) = llm.get("extra") {
+            let r = serde_json::to_string(extra).map_err(|e| format!("Failed to serialize extra config: {}", e));
+            if r.is_ok() {
+                llm_config = r.unwrap();
+            }
+        }
+    }
+
+    let r = sqlx::query("INSERT INTO `LLM_AGENT` (`name`, `desc`, `prompt`, `tags`, `agent_type`, `llm_config`, `llm_provider_id`, `llm_model_id`, `builtin`, `config`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        .bind(name)
+        .bind(desc)
+        .bind(prompt)
+        .bind("")
+        .bind(1)
+        .bind(llm_config)
+        .bind(llm_provider_id)
+        .bind(llm_model_id)
+        .bind(0)
+        .bind("{}")
+        .execute(db)
+        .await
+        .map_err(|e| format!("Failed to create agent {}", e));
+
+    if r.is_err() {
+        return Ok(json!({
+            "code": 301,
+            "msg": r.err().unwrap().to_string(),
+            "data": Value::Null
+        }));
+    }
+    Ok(json!({
+        "code": 0,
+        "data": Value::Null
+    }))
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn delete_llm_agent(id: i64, state: tauri::State<'_, AppState>) -> Result<Value, Error> {
+    let db = &state.db;
+    let r = sqlx::query("DELETE FROM `LLM_AGENT` WHERE `id` = ?")
+        .bind(id)
+        .execute(db)
+        .await
+        .map_err(|e| format!("Failed to delete agent {}", e));
+    if r.is_err() {
+        return Ok(json!({
+            "code": 301,
+            "msg": r.err().unwrap().to_string(),
+            "data": Value::Null
+        }));
+    }
+    Ok(json!({
+        "code": 0,
+        "data": Value::Null
+    }))
+}

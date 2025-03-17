@@ -444,7 +444,7 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
       });
       _providers = providers;
       _values = values;
-      console.log("[LLM]setProvidersFromJSON", _values);
+      console.log("[LLM]setProvidersFromJSON", _providers, _values);
       this.patch(values);
     },
     get firstEnabledProvider() {
@@ -627,7 +627,7 @@ export function LLMProviderStore(props: LLMProviderStoreProps) {
     },
     /** 根据 provider_id 和 model_id 构建 LLM 服务所需的 payload */
     buildLLMServicePayload(payload: { provider_id: string; model_id: string }) {
-      // console.log("[BIZ]llm_provider - buildLLMServicePayload", payload, _providers, _values);
+      console.log("[BIZ]llm_provider - buildLLMServicePayload", payload, _providers, _values);
       const provider = _providers.find((p) => p.id === payload.provider_id);
       if (!provider) {
         return Result.Err(`找不到对应的 LLM 提供商: ${payload.provider_id}`);

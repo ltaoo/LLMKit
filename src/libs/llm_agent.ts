@@ -30,7 +30,7 @@ type LLMAgentCoreProps = {
 export function LLMAgentCore(props: LLMAgentCoreProps) {
   let _id = props.id;
   let _name = props.name;
-  let _desc = props.desc;
+  let _desc = props.desc ?? "";
   let _prompt = props.prompt;
   let _builtin = props.builtin ?? false;
   let _builder = props.builder;
@@ -92,14 +92,26 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
     get name() {
       return _name;
     },
+    set name(name: string) {
+      _name = name;
+    },
     get desc() {
       return _desc;
+    },
+    set desc(desc: string) {
+      _desc = desc;
     },
     get prompt() {
       return _prompt;
     },
+    set prompt(prompt: string) {
+      _prompt = prompt;
+    },
     get llm() {
       return _llm_payload;
+    },
+    get builtin() {
+      return _builtin;
     },
     setLLMStore(llm_store: LLMProviderStore) {
       _llm_store = llm_store;
@@ -319,7 +331,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
       return this.llm.model_id;
     },
     get llm() {
-      if (!_agent || !_llm_store) {
+      if (!_agent) {
         return {
           provider_id: "",
           model_id: "",
@@ -331,6 +343,9 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
         model_id: _agent.llm.model_id,
         extra: _provider_configure.toJSON(),
       };
+    },
+    get builtin() {
+      return _agent?.builtin ?? false;
     },
     get provider_configure() {
       return _provider_configure;
@@ -369,17 +384,53 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
     get prompt() {
       return _prompt;
     },
+    get providerConfigure() {
+      return _provider_configure;
+    },
+    get agent() {
+      return _agent;
+    },
     updateName(name: string) {
       _name = name;
+      if (_agent) {
+        _agent.name = name;
+      }
     },
     updateDesc(desc: string) {
       _desc = desc;
+      if (_agent) {
+        _agent.desc = desc;
+      }
     },
     updatePrompt(prompt: string) {
       _prompt = prompt;
+      if (_agent) {
+        _agent.prompt = prompt;
+      }
     },
     setAgentStore(agent_store: LLMAgentStore) {
       _agent_store = agent_store;
+    },
+    get isCreateAgent() {
+      return _agent?.id === "";
+    },
+    startCreateAgent() {
+      _id = "";
+      _name = "";
+      _desc = "";
+      _prompt = "";
+      _agent = LLMAgentCore({
+        id: "",
+        name: "",
+        desc: "",
+        prompt: "",
+        builtin: false,
+        llm_config: LLMAgentCore.DefaultLLM,
+      });
+      _agent_store.attachLLMServiceAndOther([_agent]);
+      _provider_configure.clear();
+      // console.log("[STORE] startCreateAgent", _agent.llm);
+      bus.emit(Events.StateChange, { ..._state });
     },
     selectAgent(agent: LLMAgentCore) {
       const prev_agent_llm = _agent ? { ..._agent.llm } : null;
@@ -451,7 +502,12 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
       payload: { provider_id: string; model_id: string },
       options: { silent?: boolean } = {}
     ) {
-      console.log("[LLMSDK]llm_agent - selectProviderModel", payload);
+      console.log(
+        "[LLMSDK]llm_agent - selectProviderModel",
+        payload,
+        _agent,
+        _llm_store
+      );
       if (!_agent || !_llm_store) {
         console.error("[STORE] 找不到对应的 agent 或 manager");
         bus.emit(Events.Error, new BizError("找不到对应的 agent 或 manager"));
@@ -526,6 +582,9 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
     toJSON() {
       return {
         id: _agent ? _agent.id : _id,
+        name: _agent ? _agent.name : _name,
+        desc: _agent ? _agent.desc : _desc,
+        prompt: _agent ? _agent.prompt : _prompt,
         llm: {
           provider_id: _agent ? _agent.llm.provider_id : null,
           model_id: _agent ? _agent.llm.model_id : null,
@@ -572,6 +631,7 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
           name: agent.name,
           desc: agent.desc,
           prompt: agent.prompt,
+          builtin: agent.builtin,
           llm: agent.llm,
         };
       });
@@ -606,6 +666,9 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
     findAgentById(id: string | number): Promise<Result<LLMAgentCore>> {
       return Promise.resolve(Result.Err("请实现 findAgentById"));
     },
+    findAgentByName(name: string): Promise<Result<LLMAgentCore>> {
+      return Promise.resolve(Result.Err("请实现 findAgentByName"));
+    },
     buildFromOuter(data: any): Result<LLMAgentCore> {
       return Result.Err("请实现 buildFromOuter");
     },
@@ -633,14 +696,21 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
         }
       }
     },
+    attachLLMServiceAndOther,
     setAgents(agents: LLMAgentCore[]) {
-      attachLLMServiceAndOther(agents);
+      this.attachLLMServiceAndOther(agents);
       _internal.agents = [...agents];
       bus.emit(Events.StateChange, { ..._state });
     },
     appendAgents(agents: LLMAgentCore[]) {
-      attachLLMServiceAndOther(agents);
+      this.attachLLMServiceAndOther(agents);
       _internal.agents = [..._internal.agents, ...agents];
+      bus.emit(Events.StateChange, { ..._state });
+    },
+    removeAgents(ids: string[]) {
+      _internal.agents = _internal.agents.filter((agent) => {
+        return !ids.includes(String(agent.id));
+      });
       bus.emit(Events.StateChange, { ..._state });
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {

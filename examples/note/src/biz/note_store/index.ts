@@ -2,7 +2,7 @@ import { base, Handler } from "@llm/libs/base";
 import { HttpClientCore } from "@llm/libs/http_client";
 
 import { RequestCore } from "@/domains/request";
-import { create_note, fetch_note_list } from "@/biz/services";
+import { create_note, delete_note, fetch_note_list } from "@/biz/services";
 import { ListCore } from "@/domains/list";
 
 type NoteStoreProps = {
@@ -13,6 +13,7 @@ export function NoteStore(props: NoteStoreProps) {
     list: new ListCore(new RequestCore(fetch_note_list, { client: props.client })),
     note: {
       create: new RequestCore(create_note, { client: props.client }),
+      delete: new RequestCore(delete_note, { client: props.client }),
     },
   };
   const _state = {
@@ -44,12 +45,19 @@ export function NoteStore(props: NoteStoreProps) {
     unshiftNote(note: { id: number; title: string; created_at: string }) {
       _request.list.modifyResponse((response) => {
         response.dataSource = [note, ...response.dataSource];
+        response.empty = false;
+        if (response.initial) {
+          response.initial = false;
+        }
         console.log("[BIZ]note_store - unshiftNote", response.dataSource);
         return response;
       });
     },
     createNote() {
       return _request.note.create.run();
+    },
+    deleteNote(id: number) {
+      return _request.note.delete.run({ id });
     },
     onStateChange(handler: Handler<TheTypesOfEvents[Events.StateChange]>) {
       return bus.on(Events.StateChange, handler);
