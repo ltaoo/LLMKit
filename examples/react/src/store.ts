@@ -1,14 +1,14 @@
-import { LLMAgentStore, LLMAgentCore } from "@llm/libs/llm_agent";
-import { LLMProviderStore } from "@llm/libs/llm_provider";
-import { LLMProviders } from "@llm/providers";
-import { Result } from "@llm/libs/result";
-import { HttpClientCore } from "@llm/libs/http_client";
-import { injectHttpClient } from "@llm/libs/http_client.inject.axios";
-import { StorageCore } from "@llm/libs/storage";
-import { ChatRoomCore } from "@llm/libs/chatroom";
-import { ChatBoxPayload, ChatBoxPayloadType } from "@llm/libs/chatbox";
-import { LLMServiceInWeb } from "@llm/libs/llm_service.web";
-import { build_request } from "@llm/libs/request_builder";
+import { LLMAgentStore, LLMAgentCore } from "@llmkit/libs/llm_agent";
+import { LLMProviderStore } from "@llmkit/libs/llm_provider";
+import { LLMProviders } from "@llmkit/providers";
+import { Result } from "@llmkit/libs/result";
+import { HttpClientCore } from "@llmkit/libs/http_client";
+import { injectHttpClient } from "@llmkit/libs/http_client.inject.axios";
+import { StorageCore } from "@llmkit/libs/storage";
+import { ChatRoomCore } from "@llmkit/libs/chatroom";
+import { ChatBoxPayload, ChatBoxPayloadType } from "@llmkit/libs/chatbox";
+import { LLMServiceInWeb } from "@llmkit/libs/llm_service.web";
+import { build_request } from "@llmkit/libs/request_builder";
 
 const DEFAULT_CACHE_VALUES = {
   llm_configs: {} as Record<

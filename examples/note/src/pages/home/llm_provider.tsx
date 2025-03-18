@@ -4,7 +4,7 @@
 
 import { For, Show } from "solid-js";
 
-import { base, Handler } from "@llm/libs/base";
+import { base, Handler } from "@llmkit/libs/base";
 
 import { llm_store } from "@/store/llm";
 import { ViewComponentProps } from "@/store/types";

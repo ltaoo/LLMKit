@@ -1,6 +1,6 @@
 import { RequestCore } from "@/domains/request";
-import { base, Handler } from "@llm/libs/base";
-import { HttpClientCore } from "@llm/libs/http_client";
+import { base, Handler } from "@llmkit/libs/base";
+import { HttpClientCore } from "@llmkit/libs/http_client";
 
 import { delete_note, fetch_note_profile, update_note } from "@/biz/services";
 

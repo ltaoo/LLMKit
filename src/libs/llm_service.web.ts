@@ -17,17 +17,30 @@ export function LLMServiceInWeb(props: LLMServiceInWebProps): LLMService {
     apiProxyAddress: string;
     apiKey: string;
     extra: Record<string, any>;
-  } = LLMServiceInWeb.DefaultPayload;
+  } = { ...LLMServiceInWeb.DefaultPayload };
 
   return {
-    setPayload(payload: {
-      provider_id: string;
-      model_id: string;
-      apiProxyAddress: string;
-      apiKey: string;
-      extra: Record<string, any>;
-    }) {
-      _payload = payload;
+    get payload() {
+      return _payload;
+    },
+    setPayload(
+      payload: {
+        provider_id: string;
+        model_id: string;
+        apiProxyAddress: string;
+        apiKey: string;
+        extra: Record<string, any>;
+      },
+      extra?: Record<string, any>
+    ) {
+      console.log("[LLMSDK]llm_service.web - setPayload", payload, extra);
+      _payload = {
+        provider_id: payload.provider_id,
+        model_id: payload.model_id,
+        apiProxyAddress: payload.apiProxyAddress,
+        apiKey: payload.apiKey,
+        extra: payload.extra,
+      };
     },
     updateExtra(extra: Record<string, any>) {
       if (!_payload) {
@@ -35,19 +48,26 @@ export function LLMServiceInWeb(props: LLMServiceInWebProps): LLMService {
       }
       _payload.extra = { ..._payload.extra, ...extra };
     },
-    async request(messages: { role: string; content: string }[]) {
+    async request(
+      messages: { role: string; content: string }[],
+      extra: Record<string, any> = {}
+    ) {
       if (!_payload) {
         return Result.Err("缺少配置参数");
       }
       const body = {
-        extra: _payload.extra,
         model: _payload.model_id,
         messages,
         apiProxyAddress: _payload.apiProxyAddress,
         apiKey: _payload.apiKey,
+        extra: _payload.extra,
       };
+      console.log(
+        "[LLMSDK]llm_service.web - request before request",
+        body,
+        extra
+      );
       const payload = await _service(body);
-      // console.log("[LLMSDK]llm_service.web - request before request", payload);
       const r = await _client.post<any>(
         [payload.hostname, payload.url].join(""),
         payload.body,

@@ -6,7 +6,7 @@ import Loader from "lucide-solid/icons/loader";
 import Trash from "lucide-solid/icons/trash";
 import dayjs from "dayjs";
 
-import { base, Handler } from "@llm/libs/base";
+import { base, Handler } from "@llmkit/libs/base";
 
 import { ViewComponent, ViewComponentProps } from "@/store/types";
 import { agent_store } from "@/store/agents";

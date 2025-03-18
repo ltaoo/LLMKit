@@ -1,6 +1,6 @@
-import { LLMProviders } from "@llm/providers";
+import { LLMProviders } from "@llmkit/providers";
 
-import { LLMProviderStore as LLMProviderStore } from "@llm/libs/llm_provider";
+import { LLMProviderStore as LLMProviderStore } from "@llmkit/libs/llm_provider";
 
 import { storage } from "./storage";
 

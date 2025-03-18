@@ -52,6 +52,7 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
       content: props.prompt,
     },
   ];
+  let _loading = false;
 
   const _state = {
     get name() {
@@ -69,11 +70,18 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
     get messages() {
       return _messages;
     },
+    get loading() {
+      return _loading;
+    },
   };
 
   enum Events {
     LLMChange,
     Error,
+    BeforeRequest,
+    RequestCompleted,
+    RequestFailed,
+    RequestSuccess,
   }
   type TheTypesOfEvents = {
     [Events.LLMChange]: {
@@ -81,6 +89,10 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
       model_id: string;
     };
     [Events.Error]: BizError;
+    [Events.BeforeRequest]: void;
+    [Events.RequestCompleted]: void;
+    [Events.RequestFailed]: void;
+    [Events.RequestSuccess]: void;
   };
   const bus = base<TheTypesOfEvents>();
 
@@ -118,18 +130,8 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
     },
     setLLMService(llm_service: LLMService) {
       _llm_service = llm_service;
-      const r = _llm_store.buildLLMServicePayload({
-        provider_id: _llm_payload.provider_id,
-        model_id: _llm_payload.model_id,
-      });
-      if (r.error) {
-        console.error(r.error.message);
-        bus.emit(Events.Error, r.error);
-        return;
-      }
-      _llm_service.setPayload(r.data);
     },
-    update(payload: {
+    updateLLM(payload: {
       llm: {
         provider_id: string;
         model_id: string;
@@ -150,12 +152,9 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
         bus.emit(Events.Error, r.error);
         return r;
       }
-      console.log("[LLMSDK]llm_agent - selectLLMModel", r.data);
+      console.log("[LLMSDK]llm_agent - selectLLMModel", _name, r.data);
       _llm_payload.provider_id = r.data.provider_id;
       _llm_payload.model_id = r.data.model_id;
-      if (_llm_service) {
-        _llm_service.setPayload(r.data);
-      }
       return Result.Ok(r.data);
     },
     /** 配置 LLM 支持的额外配置项，比如 流式输出、上下文长度、温度等 */
@@ -164,9 +163,6 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
       options: { silent?: boolean } = {}
     ) {
       _llm_payload.extra = { ..._llm_payload.extra, ...payload };
-      if (_llm_service) {
-        _llm_service.updateExtra(_llm_payload.extra);
-      }
     },
     /** 更新 LLM 服务配置 */
     setLLMServicePayload(
@@ -180,15 +176,31 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
       options: { silent?: boolean } = {}
     ) {
       if (!_llm_service) {
-        throw new BizError("请先设置 LLM 服务");
+        const err = new BizError("请先设置 LLM 服务");
+        console.error(err.message);
+        bus.emit(Events.Error, err);
+        return;
       }
-      _llm_service.setPayload({
-        provider_id: payload.provider_id,
-        apiProxyAddress: payload.apiProxyAddress,
-        apiKey: payload.apiKey,
-        model_id: payload.model_id,
-        extra: payload.extra,
-      });
+      _llm_service.setPayload(
+        {
+          provider_id: payload.provider_id,
+          apiProxyAddress: payload.apiProxyAddress,
+          apiKey: payload.apiKey,
+          model_id: payload.model_id,
+          extra: payload.extra,
+        },
+        { name: _name }
+      );
+    },
+    debugLLMServicePayload() {
+      if (!_llm_service) {
+        return;
+      }
+      console.log(
+        "[LLMSDK]llm_agent - debugLLMServicePayload",
+        _name,
+        _llm_payload
+      );
     },
     setMemorize(memorize: boolean) {
       _memorize = memorize;
@@ -199,6 +211,20 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
     appendMessages(text: string) {
       _messages.push({ role: "user", content: text });
       return _messages;
+    },
+    updateLLMServicePayload() {
+      if (!_llm_service) {
+        return Result.Err("请先设置 LLM 服务");
+      }
+      const r = _llm_store.buildLLMServicePayload({
+        provider_id: _llm_payload.provider_id,
+        model_id: _llm_payload.model_id,
+      });
+      if (r.error) {
+        return r;
+      }
+      _llm_service.setPayload(r.data);
+      return Result.Ok(null);
     },
     /** 调用 LLM 并返回结果 */
     async request<T extends any>(content: string) {
@@ -214,10 +240,23 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
           { role: "user", content },
         ];
       })();
-      const r = await _llm_service.request(messages);
+      const r1 = this.updateLLMServicePayload();
+      if (r1.error) {
+        return r1;
+      }
+      _loading = true;
+      bus.emit(Events.BeforeRequest);
+      const r = await _llm_service.request(messages, {
+        name: _name,
+        payload: _llm_service.payload,
+      });
+      _loading = false;
+      bus.emit(Events.RequestCompleted);
       if (r.error) {
+        bus.emit(Events.RequestFailed);
         return Result.Err(r.error);
       }
+      bus.emit(Events.RequestSuccess);
       const r2 = _responseHandler(r.data);
       if (r2.error) {
         return Result.Err(r2.error);
@@ -548,7 +587,7 @@ export function LLMAgentEditorCore(props: LLMAgentEditorCoreProps) {
         }
       }
       _agent.selectLLMModel(payload);
-      console.log("[LLMSDK]llm_agent - selectProviderModel - _agent.selectLLMModel", options.silent);
+      // console.log("[LLMSDK]llm_agent - selectProviderModel - _agent.selectLLMModel", options.silent);
       if (!options.silent) {
         bus.emit(Events.Change, this.toJSON());
         bus.emit(Events.StateChange, { ..._state });
@@ -610,6 +649,7 @@ type LLMAgentStoreProps = {
   agents: LLMAgentCore[];
   llm_store: LLMProviderStore;
   client: HttpClientCore;
+  /** 每个 agent 维护自己的 service，因为 service 的请求参数是不同的，不能所有 agent 共用一个 service */
   llm_service: LLMService;
 };
 export function LLMAgentStore(props: LLMAgentStoreProps) {
@@ -639,7 +679,7 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
       });
     },
     get current_agent() {
-      return LLMAgentCore.DefaultPayload;
+      return { ...LLMAgentCore.DefaultPayload };
     },
   };
   enum Events {
@@ -691,7 +731,7 @@ export function LLMAgentStore(props: LLMAgentStoreProps) {
         const agent = _internal.agents[i];
         const config = agents[agent.id];
         if (config) {
-          agent.update({
+          agent.updateLLM({
             llm: config.llm,
           });
           // _editor.setConfigureValue(config.llm.extra);

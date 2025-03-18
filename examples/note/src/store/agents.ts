@@ -1,8 +1,8 @@
-import { LLMAgentCore, LLMAgentStore } from "@llm/libs/llm_agent";
-import { Result } from "@llm/libs/result";
-import { ChatBoxPayload, ChatBoxPayloadType } from "@llm/libs/chatbox";
-import { LLMServiceInWeb } from "@llm/libs/llm_service.web";
-import { build_request } from "@llm/libs/request_builder";
+import { LLMAgentCore, LLMAgentStore } from "@llmkit/libs/llm_agent";
+import { Result } from "@llmkit/libs/result";
+import { ChatBoxPayload, ChatBoxPayloadType } from "@llmkit/libs/chatbox";
+import { LLMServiceInWeb } from "@llmkit/libs/llm_service.web";
+import { build_request } from "@llmkit/libs/request_builder";
 
 import { find_llm_agent_by_id, find_llm_agent_by_name } from "@/biz/services";
 import { RequestCore } from "@/domains/request";

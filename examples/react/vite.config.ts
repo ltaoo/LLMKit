@@ -19,9 +19,10 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@llm": path.resolve(__dirname, "../../src"),
+      "@llmkit": path.resolve(__dirname, "../../src"),
+      "@logic": path.resolve(__dirname, "../multiple-agent"),
       "@": path.resolve(__dirname, "./src"),
-      axios: path.resolve(__dirname, 'node_modules/axios'),
+      axios: path.resolve(__dirname, "node_modules/axios"),
     },
   },
   esbuild: {

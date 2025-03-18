@@ -12,9 +12,12 @@ export function LLMServiceInNode(props: LLMServiceInNodeProps): LLMService {
     apiProxyAddress: string;
     apiKey: string;
     extra: Record<string, any>;
-  } = LLMServiceInNode.DefaultPayload;
+  } = { ...LLMServiceInNode.DefaultPayload };
 
   return {
+    get payload() {
+      return _payload;
+    },
     setPayload(payload: {
       provider_id: string;
       model_id: string;

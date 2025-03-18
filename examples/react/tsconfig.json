@@ -24,7 +24,8 @@
 
     "paths": {
       "@/*": ["./src/*"],
-      "@llm/*": ["../../src/*"]
+      "@llmkit/*": ["../../src/*"],
+      "@logic/*": ["../multiple-agent/*"]
     }
   },
   "include": ["src"],

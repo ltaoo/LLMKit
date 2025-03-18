@@ -1,10 +1,10 @@
 import { For, Show } from "solid-js";
 
-import { base, Handler } from "@llm/libs/base";
-import { ChatRoomCore } from "@llm/libs/chatroom";
-import { ChatBoxPayloadType } from "@llm/libs/chatbox";
-import { BizError } from "@llm/libs/biz_error";
-import { LLMAgentCore } from "@llm/libs/llm_agent";
+import { base, Handler } from "@llmkit/libs/base";
+import { ChatRoomCore } from "@llmkit/libs/chatroom";
+import { ChatBoxPayloadType } from "@llmkit/libs/chatbox";
+import { BizError } from "@llmkit/libs/biz_error";
+import { LLMAgentCore } from "@llmkit/libs/llm_agent";
 
 import { ViewComponentProps } from "@/store/types";
 import { ChatBoxPayloadCustomType } from "@/store/agents";

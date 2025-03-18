@@ -5,8 +5,8 @@ import { For, Show } from "solid-js";
 import Trash from "lucide-solid/icons/trash-2";
 import PenEdit from "lucide-solid/icons/edit-2";
 
-import { base, Handler } from "@llm/libs/base";
-import { LLMAgentEditorCore } from "@llm/libs/llm_agent";
+import { base, Handler } from "@llmkit/libs/base";
+import { LLMAgentEditorCore } from "@llmkit/libs/llm_agent";
 
 import { agent_store } from "@/store/agents";
 import { llm_store } from "@/store/llm";
