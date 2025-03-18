@@ -9,7 +9,6 @@
 
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
-    <script>!function () { try { var d = document.documentElement, n = 'data-theme', s = 'setAttribute'; var e = localStorage.getItem('theme'); if ('system' === e || (!e && true)) { var t = '(prefers-color-scheme: dark)', m = window.matchMedia(t); if (m.media !== t || m.matches) { d.style.colorScheme = 'dark'; d[s](n, 'dark') } else { d.style.colorScheme = 'light'; d[s](n, 'light') } } else if (e) { d[s](n, e || '') } if (e === 'light' || e === 'dark') d.style.colorScheme = e } catch (e) { } }()</script>
     <div id="root"></div>
     <script src="/src/index.tsx" type="module"></script>
   </body>
