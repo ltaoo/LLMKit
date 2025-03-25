@@ -85,14 +85,14 @@ export const LLMProviders = [
     api_address: "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
     models: [
       LLMProviderModelCore({
-        id: "doubao-1-5-pro-32k-250115",
-        name: "doubao-1.5-pro",
+        id: "doubao-1-5-vision-pro-32k-250115",
+        name: "doubao-1.5-vision-pro",
         desc: "",
         tags: [],
       }),
       LLMProviderModelCore({
-        id: "doubao-1-5-lite-32k-250115",
-        name: "doubao-1.5-lite",
+        id: "doubao-1-5-pro-32k-250115",
+        name: "doubao-1.5-pro",
         desc: "",
         tags: [],
       }),

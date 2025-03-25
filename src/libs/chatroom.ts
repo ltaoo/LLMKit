@@ -94,6 +94,10 @@ export function ChatRoomCore(props: ChatRoomCoreProps) {
       bus.emit(Events.StateChange, { ..._state });
     },
     sendMessage(text?: string) {
+      if (_agents.length === 0) {
+        console.error("请先添加 Agent");
+        return;
+      }
       if (_loading) {
         return;
       }

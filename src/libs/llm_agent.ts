@@ -16,7 +16,9 @@ type LLMAgentCoreProps = {
   name: string;
   desc?: string;
   prompt: string;
-  config?: Record<string, any>;
+  config?: {
+    memorize?: boolean;
+  };
   builtin?: boolean;
   llm_config?: {
     provider_id: string;
@@ -257,6 +259,7 @@ export function LLMAgentCore(props: LLMAgentCoreProps) {
         return Result.Err(r.error);
       }
       bus.emit(Events.RequestSuccess);
+      _messages.push({ role: "assistant", content: r.data });
       const r2 = _responseHandler(r.data);
       if (r2.error) {
         return Result.Err(r2.error);
